@@ -32,6 +32,10 @@ pub enum Primitive {
     Unit,
     NoReturn,
     EarlyReturn(Box<Primitive>),
+    #[serde(skip_serializing, skip_deserializing)]
+    NativeFunction {
+        function: fn([Primitive]) -> Primitive,
+    },
 }
 
 pub type RefPrimitive = Arc<RwLock<Primitive>>;
@@ -80,6 +84,7 @@ pub trait Sin {
 pub trait Array {
     fn index_at(&self, rhs: &Self) -> Self;
     fn len(&self) -> Primitive;
+    fn is_empty(&self) -> Primitive;
     fn swap_mem(&mut self, rhs: &mut Self, index: &Primitive) -> Self;
     fn remove(&mut self, key: &Self) -> anyhow::Result<()>;
 }
@@ -248,6 +253,7 @@ impl Display for Primitive {
             Primitive::NoReturn => write!(f, "!"),
             Primitive::Null => write!(f, "{NULL}"),
             Primitive::EarlyReturn(p) => write!(f, "{p}"),
+            Primitive::NativeFunction { .. } => write!(f, "__native_fn__"),
         }
     }
 }
@@ -761,6 +767,7 @@ impl PartialOrd for Primitive {
                     None
                 }
             }
+            (Primitive::NativeFunction { .. }, _) | (_, Primitive::NativeFunction { .. }) => None,
             (Primitive::Struct(_), _) => None,
             (Primitive::Int(_), _) => None,
             (Primitive::Double(_), _) => None,
@@ -795,10 +802,9 @@ impl TypeOf for Primitive {
             Primitive::String(_) => Primitive::String("string".to_string()),
             Primitive::Array(_) => Primitive::String("array".to_string()),
             Primitive::Error(_) => Primitive::String("error".to_string()),
-            Primitive::Function {
-                parameters: _,
-                exprs: _,
-            } => Primitive::String("function".to_string()),
+            Primitive::Function { .. } | Primitive::NativeFunction { .. } => {
+                Primitive::String("function".to_string())
+            }
             Primitive::Struct(_) => Primitive::String("struct".to_string()),
             Primitive::Unit => Primitive::String("unit".to_string()),
             Primitive::NoReturn => Primitive::String("!".to_string()),
@@ -974,6 +980,13 @@ impl Array for Primitive {
                 }
             }
             _ => Err(anyhow::Error::msg("illegal access to array!!!")),
+        }
+    }
+
+    fn is_empty(&self) -> Primitive {
+        match self.len() {
+            Primitive::Int(n) => Primitive::Bool(n == 0),
+            e => Primitive::Error(format!("err: {e}")),
         }
     }
 }
