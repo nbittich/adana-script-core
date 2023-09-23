@@ -2,6 +2,7 @@ use std::{
     cmp::Ordering,
     collections::BTreeMap,
     fmt::Display,
+    path::Path,
     rc::Rc,
     sync::{Arc, RwLock},
 };
@@ -22,6 +23,11 @@ pub struct NativeLibrary {
 pub type NativeFunction<'lib> =
     libloading::Symbol<'lib, unsafe extern "C" fn(Vec<Primitive>) -> Primitive>;
 impl NativeLibrary {
+    pub unsafe fn new(path: &Path) -> anyhow::Result<NativeLibrary> {
+        let lib = libloading::Library::new(path)
+            .map_err(|e| anyhow::format_err!("could not load lib, {e}"))?;
+        Ok(NativeLibrary { lib })
+    }
     pub unsafe fn get_function(&self, key: &str) -> anyhow::Result<NativeFunction> {
         self.lib.get(key.as_bytes()).context("{key} wasn't found")
     }
