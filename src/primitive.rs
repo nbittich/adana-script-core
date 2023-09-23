@@ -6,13 +6,26 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 use serde_derive::{Deserialize, Serialize};
 
 use super::{constants::NULL, Value};
 
 const MAX_U32_AS_I128: i128 = u32::MAX as i128;
+
+#[derive(Debug)]
+pub struct NativeLibrary {
+    lib: libloading::Library,
+}
+#[allow(improper_ctypes_definitions)]
+pub type NativeFunction<'lib> =
+    libloading::Symbol<'lib, unsafe extern "C" fn(Vec<Primitive>) -> Primitive>;
+impl NativeLibrary {
+    pub unsafe fn get_function(&self, key: &str) -> anyhow::Result<NativeFunction> {
+        self.lib.get(key.as_bytes()).context("{key} wasn't found")
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[repr(C)]
@@ -34,7 +47,7 @@ pub enum Primitive {
     NoReturn,
     EarlyReturn(Box<Primitive>),
     #[serde(skip_serializing, skip_deserializing)]
-    NativeFunction(Rc<libloading::Library>),
+    NativeLibrary(Rc<NativeLibrary>),
 }
 
 pub type RefPrimitive = Arc<RwLock<Primitive>>;
@@ -252,7 +265,7 @@ impl Display for Primitive {
             Primitive::NoReturn => write!(f, "!"),
             Primitive::Null => write!(f, "{NULL}"),
             Primitive::EarlyReturn(p) => write!(f, "{p}"),
-            Primitive::NativeFunction { .. } => write!(f, "__native_fn__"),
+            Primitive::NativeLibrary { .. } => write!(f, "__native_lib__"),
         }
     }
 }
@@ -766,7 +779,7 @@ impl PartialOrd for Primitive {
                     None
                 }
             }
-            (Primitive::NativeFunction { .. }, _) | (_, Primitive::NativeFunction { .. }) => None,
+            (Primitive::NativeLibrary { .. }, _) | (_, Primitive::NativeLibrary { .. }) => None,
             (Primitive::Struct(_), _) => None,
             (Primitive::Int(_), _) => None,
             (Primitive::Double(_), _) => None,
@@ -801,7 +814,7 @@ impl TypeOf for Primitive {
             Primitive::String(_) => Primitive::String("string".to_string()),
             Primitive::Array(_) => Primitive::String("array".to_string()),
             Primitive::Error(_) => Primitive::String("error".to_string()),
-            Primitive::Function { .. } | Primitive::NativeFunction { .. } => {
+            Primitive::Function { .. } | Primitive::NativeLibrary { .. } => {
                 Primitive::String("function".to_string())
             }
             Primitive::Struct(_) => Primitive::String("struct".to_string()),
