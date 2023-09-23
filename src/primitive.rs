@@ -25,6 +25,14 @@ impl NativeLibrary {
     pub unsafe fn get_function(&self, key: &str) -> anyhow::Result<NativeFunction> {
         self.lib.get(key.as_bytes()).context("{key} wasn't found")
     }
+    pub unsafe fn call_function(
+        &self,
+        key: &str,
+        params: Vec<Primitive>,
+    ) -> anyhow::Result<Primitive> {
+        let fun = self.get_function(key)?;
+        Ok(fun(params))
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
