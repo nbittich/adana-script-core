@@ -2,6 +2,7 @@ use std::{
     cmp::Ordering,
     collections::BTreeMap,
     fmt::Display,
+    rc::Rc,
     sync::{Arc, RwLock},
 };
 
@@ -33,9 +34,7 @@ pub enum Primitive {
     NoReturn,
     EarlyReturn(Box<Primitive>),
     #[serde(skip_serializing, skip_deserializing)]
-    NativeFunction {
-        function: Box<fn(Vec<Primitive>) -> Primitive>,
-    },
+    NativeFunction(Rc<libloading::Library>),
 }
 
 pub type RefPrimitive = Arc<RwLock<Primitive>>;
