@@ -43,9 +43,10 @@ impl NativeLibrary {
         &self,
         key: &str,
         params: Vec<Primitive>,
+        compiler: Compiler,
     ) -> anyhow::Result<Primitive> {
         let fun = self.get_function(key)?;
-        Ok(fun(params))
+        Ok(fun(params, compiler))
     }
 }
 
