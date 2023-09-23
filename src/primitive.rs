@@ -24,7 +24,7 @@ pub struct NativeLibrary {
 pub type Compiler = dyn FnMut(Value, BTreeMap<String, RefPrimitive>) -> anyhow::Result<Primitive>;
 #[allow(improper_ctypes_definitions)]
 pub type NativeFunction<'lib> =
-    libloading::Symbol<'lib, fn(Vec<Primitive>, Box<Compiler>) -> Primitive>;
+    libloading::Symbol<'lib, fn(Vec<Primitive>, Box<Compiler>) -> anyhow::Result<Primitive>>;
 impl NativeLibrary {
     pub unsafe fn new(path: &Path) -> anyhow::Result<NativeLibrary> {
         let lib = libloading::Library::new(&path)
@@ -47,7 +47,7 @@ impl NativeLibrary {
         compiler: Box<Compiler>,
     ) -> anyhow::Result<Primitive> {
         let fun = self.get_function(key)?;
-        Ok(fun(params, compiler))
+        fun(params, compiler)
     }
 }
 
@@ -128,7 +128,7 @@ impl Primitive {
                 return Err(anyhow::anyhow!("cannot convert native lib to value"));
             }
             Primitive::NativeFunction(_method, _lib) => {
-                return Err(anyhow::anyhow!("cannot convert native function  to value"));
+                return Err(anyhow::anyhow!("cannot convert native function to value"));
             }
         };
         Ok(v)
