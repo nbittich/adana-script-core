@@ -7,11 +7,9 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 
 use serde_derive::{Deserialize, Serialize};
-
-use crate::{BuiltInFunctionType, TreeNodeValue};
 
 use super::{constants::NULL, Value};
 
@@ -23,7 +21,7 @@ pub struct NativeLibrary {
     path: PathBuf,
 }
 
-pub type Compiler = fn(Value, BTreeMap<String, RefPrimitive>) -> Primitive;
+pub type Compiler = fn(Value, &BTreeMap<String, RefPrimitive>) -> Primitive;
 #[allow(improper_ctypes_definitions)]
 pub type NativeFunction<'lib> = libloading::Symbol<'lib, fn(Vec<Primitive>, Compiler) -> Primitive>;
 impl NativeLibrary {
