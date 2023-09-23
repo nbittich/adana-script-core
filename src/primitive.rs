@@ -124,8 +124,12 @@ impl Primitive {
                 let v = e.to_value()?;
                 Value::EarlyReturn(Box::new(Some(v)))
             }
-            Primitive::NativeLibrary(lib) => todo!(),
-            Primitive::NativeFunction(method, lib) => todo!(),
+            Primitive::NativeLibrary(_) => {
+                return Err(anyhow::anyhow!("cannot convert native lib to value"));
+            }
+            Primitive::NativeFunction(_method, _lib) => {
+                return Err(anyhow::anyhow!("cannot convert native function  to value"));
+            }
         };
         Ok(v)
     }
