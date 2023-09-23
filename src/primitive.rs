@@ -2,7 +2,7 @@ use std::{
     cmp::Ordering,
     collections::BTreeMap,
     fmt::Display,
-    path::Path,
+    path::{Path, PathBuf},
     rc::Rc,
     sync::{Arc, RwLock},
 };
@@ -18,15 +18,22 @@ const MAX_U32_AS_I128: i128 = u32::MAX as i128;
 #[derive(Debug)]
 pub struct NativeLibrary {
     lib: libloading::Library,
+    path: PathBuf,
 }
 #[allow(improper_ctypes_definitions)]
 pub type NativeFunction<'lib> =
     libloading::Symbol<'lib, unsafe extern "C" fn(Vec<Primitive>) -> Primitive>;
 impl NativeLibrary {
     pub unsafe fn new(path: &Path) -> anyhow::Result<NativeLibrary> {
-        let lib = libloading::Library::new(path)
+        let lib = libloading::Library::new(&path)
             .map_err(|e| anyhow::format_err!("could not load lib, {e}"))?;
-        Ok(NativeLibrary { lib })
+        Ok(NativeLibrary {
+            lib,
+            path: path.to_path_buf(),
+        })
+    }
+    pub fn get_path(&self) -> &Path {
+        self.path.as_path()
     }
     pub unsafe fn get_function(&self, key: &str) -> anyhow::Result<NativeFunction> {
         self.lib.get(key.as_bytes()).context("{key} wasn't found")
@@ -62,6 +69,8 @@ pub enum Primitive {
     EarlyReturn(Box<Primitive>),
     #[serde(skip_serializing, skip_deserializing)]
     NativeLibrary(Rc<NativeLibrary>),
+    #[serde(skip_serializing, skip_deserializing)]
+    NativeFunction(String, Rc<NativeLibrary>),
 }
 
 pub type RefPrimitive = Arc<RwLock<Primitive>>;
@@ -280,6 +289,7 @@ impl Display for Primitive {
             Primitive::Null => write!(f, "{NULL}"),
             Primitive::EarlyReturn(p) => write!(f, "{p}"),
             Primitive::NativeLibrary { .. } => write!(f, "__native_lib__"),
+            Primitive::NativeFunction(key, _) => write!(f, "__native_fn__{key}"),
         }
     }
 }
@@ -794,6 +804,7 @@ impl PartialOrd for Primitive {
                 }
             }
             (Primitive::NativeLibrary { .. }, _) | (_, Primitive::NativeLibrary { .. }) => None,
+            (Primitive::NativeFunction(_, _), _) | (_, Primitive::NativeFunction(_, _)) => None,
             (Primitive::Struct(_), _) => None,
             (Primitive::Int(_), _) => None,
             (Primitive::Double(_), _) => None,
@@ -828,7 +839,8 @@ impl TypeOf for Primitive {
             Primitive::String(_) => Primitive::String("string".to_string()),
             Primitive::Array(_) => Primitive::String("array".to_string()),
             Primitive::Error(_) => Primitive::String("error".to_string()),
-            Primitive::Function { .. } | Primitive::NativeLibrary { .. } => {
+            Primitive::NativeLibrary(_) => Primitive::String("nativeLibrary".into()),
+            Primitive::Function { .. } | Primitive::NativeFunction(_, _) => {
                 Primitive::String("function".to_string())
             }
             Primitive::Struct(_) => Primitive::String("struct".to_string()),
