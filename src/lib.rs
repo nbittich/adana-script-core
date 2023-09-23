@@ -1,6 +1,7 @@
 pub mod primitive;
 use std::collections::BTreeMap;
 
+use constants::REQUIRE;
 use primitive::Primitive;
 use serde_derive::{Deserialize, Serialize};
 use strum::EnumCount;
@@ -62,6 +63,7 @@ pub mod constants {
     pub const TYPE_OF: &str = "type_of";
     pub const FOR: &str = "for";
     pub const IN: &str = "in";
+    pub const REQUIRE: &str = "require";
 }
 
 #[derive(Debug, EnumCount)]
@@ -180,6 +182,7 @@ pub enum BuiltInFunctionType {
     TypeOf,
     Length,
     Include,
+    Require,
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Serialize, Deserialize)]
@@ -244,7 +247,8 @@ impl BuiltInFunctionType {
             BuiltInFunctionType::Print => PRINT,
             BuiltInFunctionType::Eval => EVAL,
             BuiltInFunctionType::Include => INCLUDE,
-            BuiltInFunctionType::ReadLines => READ_LINES,
+            BuiltInFunctionType::Require => REQUIRE,
+            BuiltInFunctionType::ReadLines => READ_LINES, // to be replaced
             BuiltInFunctionType::ToInt => TO_INT,
             BuiltInFunctionType::ToDouble => TO_DOUBLE,
             BuiltInFunctionType::ToBool => TO_BOOL,
