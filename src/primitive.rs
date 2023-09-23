@@ -20,9 +20,10 @@ pub struct NativeLibrary {
     lib: libloading::Library,
     path: PathBuf,
 }
+
+pub type Compiler = fn(Primitive) -> Primitive;
 #[allow(improper_ctypes_definitions)]
-pub type NativeFunction<'lib> =
-    libloading::Symbol<'lib, unsafe extern "C" fn(Vec<Primitive>) -> Primitive>;
+pub type NativeFunction<'lib> = libloading::Symbol<'lib, fn(Vec<Primitive>, Compiler) -> Primitive>;
 impl NativeLibrary {
     pub unsafe fn new(path: &Path) -> anyhow::Result<NativeLibrary> {
         let lib = libloading::Library::new(&path)
