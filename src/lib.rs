@@ -64,7 +64,7 @@ pub mod constants {
     pub const FOR: &str = "for";
     pub const IN: &str = "in";
     pub const REQUIRE: &str = "require";
-    pub const NATIVE_LIB: &str = "__native_lib__";
+    pub const NATIVE_LIB: &[u8; 14] = b"__native_lib__";
 }
 
 #[derive(Debug, EnumCount)]
