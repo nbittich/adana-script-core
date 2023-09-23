@@ -876,7 +876,9 @@ impl Array for Primitive {
                     Primitive::Null
                 }
             }
-            _ => Primitive::Error("illegal access to array!!!".to_string()),
+            (key, value) => {
+                Primitive::Error(format!("illegal access to array!!!  {key} => {value}"))
+            }
         }
     }
 
