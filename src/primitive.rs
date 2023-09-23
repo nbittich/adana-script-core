@@ -34,7 +34,7 @@ pub enum Primitive {
     EarlyReturn(Box<Primitive>),
     #[serde(skip_serializing, skip_deserializing)]
     NativeFunction {
-        function: fn(Box<Vec<Primitive>>) -> Primitive,
+        function: Box<fn(Vec<Primitive>) -> Primitive>,
     },
 }
 
