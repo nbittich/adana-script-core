@@ -21,7 +21,7 @@ pub struct NativeLibrary {
     path: PathBuf,
 }
 
-pub type Compiler = dyn FnMut(Value, BTreeMap<String, RefPrimitive>) -> Primitive;
+pub type Compiler = dyn FnMut(Value, BTreeMap<String, RefPrimitive>) -> anyhow::Result<Primitive>;
 #[allow(improper_ctypes_definitions)]
 pub type NativeFunction<'lib> =
     libloading::Symbol<'lib, fn(Vec<Primitive>, Box<Compiler>) -> Primitive>;
