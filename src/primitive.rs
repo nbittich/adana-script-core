@@ -21,9 +21,10 @@ pub struct NativeLibrary {
     path: PathBuf,
 }
 
-pub type Compiler = fn(Value, BTreeMap<String, RefPrimitive>) -> Primitive;
+pub type Compiler = dyn FnMut(Value, BTreeMap<String, RefPrimitive>) -> Primitive;
 #[allow(improper_ctypes_definitions)]
-pub type NativeFunction<'lib> = libloading::Symbol<'lib, fn(Vec<Primitive>, Compiler) -> Primitive>;
+pub type NativeFunction<'lib> =
+    libloading::Symbol<'lib, fn(Vec<Primitive>, Box<Compiler>) -> Primitive>;
 impl NativeLibrary {
     pub unsafe fn new(path: &Path) -> anyhow::Result<NativeLibrary> {
         let lib = libloading::Library::new(&path)
@@ -43,7 +44,7 @@ impl NativeLibrary {
         &self,
         key: &str,
         params: Vec<Primitive>,
-        compiler: Compiler,
+        compiler: Box<Compiler>,
     ) -> anyhow::Result<Primitive> {
         let fun = self.get_function(key)?;
         Ok(fun(params, compiler))
