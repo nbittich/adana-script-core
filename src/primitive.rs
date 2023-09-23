@@ -7,9 +7,11 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 
 use serde_derive::{Deserialize, Serialize};
+
+use crate::{BuiltInFunctionType, TreeNodeValue};
 
 use super::{constants::NULL, Value};
 
@@ -21,7 +23,7 @@ pub struct NativeLibrary {
     path: PathBuf,
 }
 
-pub type Compiler = fn(Primitive) -> Primitive;
+pub type Compiler = fn(Value, BTreeMap<String, RefPrimitive>) -> Primitive;
 #[allow(improper_ctypes_definitions)]
 pub type NativeFunction<'lib> = libloading::Symbol<'lib, fn(Vec<Primitive>, Compiler) -> Primitive>;
 impl NativeLibrary {
@@ -81,6 +83,52 @@ pub type RefPrimitive = Arc<RwLock<Primitive>>;
 impl Primitive {
     pub fn ref_prim(self) -> RefPrimitive {
         Arc::new(RwLock::new(self))
+    }
+    pub fn to_value(self) -> anyhow::Result<Value> {
+        let v = match self {
+            Primitive::Int(i) => Value::Integer(i),
+            Primitive::Bool(b) => Value::Bool(b),
+            Primitive::Ref(r) => {
+                let r = r
+                    .read()
+                    .map_err(|e| anyhow::format_err!("could not acquire lock {e}"))?
+                    .clone();
+                r.to_value()?
+            }
+            Primitive::Null => Value::Null,
+            Primitive::Double(d) => Value::Decimal(d),
+            Primitive::String(s) => Value::String(s),
+            Primitive::Array(a) => {
+                let mut vek = vec![];
+                for p in a {
+                    let p = p.to_value()?;
+                    vek.push(p);
+                }
+                Value::Array(vek)
+            }
+            Primitive::Struct(s) => {
+                let mut map = BTreeMap::new();
+                for (k, v) in s {
+                    let p = v.to_value()?;
+                    map.insert(k, p);
+                }
+                Value::Struct(map)
+            }
+            Primitive::Error(e) => return Err(anyhow::format_err!("{e}")),
+            Primitive::Function { parameters, exprs } => Value::Function {
+                parameters: Box::new(Value::BlockParen(parameters)),
+                exprs,
+            },
+            Primitive::Unit => Value::NoOp,
+            Primitive::NoReturn => Value::NoOp,
+            Primitive::EarlyReturn(e) => {
+                let v = e.to_value()?;
+                Value::EarlyReturn(Box::new(Some(v)))
+            }
+            Primitive::NativeLibrary(lib) => todo!(),
+            Primitive::NativeFunction(method, lib) => todo!(),
+        };
+        Ok(v)
     }
 }
 
