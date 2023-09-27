@@ -3,7 +3,6 @@ use std::{
     collections::BTreeMap,
     fmt::Display,
     path::{Path, PathBuf},
-    rc::Rc,
     sync::{Arc, RwLock},
 };
 
@@ -27,8 +26,10 @@ pub type Compiler = dyn FnMut(Value, BTreeMap<String, RefPrimitive>) -> NativeFu
 pub type NativeFunction<'lib> =
     libloading::Symbol<'lib, fn(Vec<Primitive>, Box<Compiler>) -> NativeFunctionCallResult>;
 impl NativeLibrary {
+    /// # Safety
+    /// trust me bro
     pub unsafe fn new(path: &Path) -> anyhow::Result<NativeLibrary> {
-        let lib = libloading::Library::new(&path)
+        let lib = libloading::Library::new(path)
             .map_err(|e| anyhow::format_err!("could not load lib, {e}"))?;
         Ok(NativeLibrary {
             lib,
@@ -38,9 +39,15 @@ impl NativeLibrary {
     pub fn get_path(&self) -> &Path {
         self.path.as_path()
     }
+    /// # Safety
+    /// trust me bro
+
     pub unsafe fn get_function(&self, key: &str) -> anyhow::Result<NativeFunction> {
         self.lib.get(key.as_bytes()).context("{key} wasn't found")
     }
+    /// # Safety
+    /// trust me bro
+
     pub unsafe fn call_function(
         &self,
         key: &str,
@@ -72,9 +79,9 @@ pub enum Primitive {
     NoReturn,
     EarlyReturn(Box<Primitive>),
     #[serde(skip_serializing, skip_deserializing)]
-    NativeLibrary(Rc<NativeLibrary>),
+    NativeLibrary(Arc<NativeLibrary>),
     #[serde(skip_serializing, skip_deserializing)]
-    NativeFunction(String, Rc<NativeLibrary>),
+    NativeFunction(String, Arc<NativeLibrary>),
 }
 
 pub type RefPrimitive = Arc<RwLock<Primitive>>;
