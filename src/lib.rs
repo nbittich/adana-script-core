@@ -8,8 +8,8 @@ use strum::EnumCount;
 
 use self::constants::TO_STRING;
 use self::constants::{
-    ABS, COS, EVAL, INCLUDE, LENGTH, LN, LOG, PRINT, PRINT_LN, READ_LINES, SIN, SQRT, TAN, TO_BOOL,
-    TO_DOUBLE, TO_INT, TYPE_OF,
+    ABS, COS, EVAL, INCLUDE, LENGTH, LN, LOG, PRINT, PRINT_LN, SIN, SQRT, TAN, TO_BOOL, TO_DOUBLE,
+    TO_INT, TYPE_OF,
 };
 
 #[macro_use]
