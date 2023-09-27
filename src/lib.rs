@@ -46,7 +46,6 @@ pub mod constants {
     pub const LENGTH: &str = "length";
     pub const LOG: &str = "log";
     pub const LN: &str = "ln";
-    pub const READ_LINES: &str = "read_lines";
     pub const SIN: &str = "sin";
     pub const COS: &str = "cos";
     pub const TAN: &str = "tan";
@@ -177,7 +176,6 @@ pub enum BuiltInFunctionType {
     ToString,
     Tan,
     Println,
-    ReadLines,
     Print,
     Eval,
     TypeOf,
@@ -249,7 +247,6 @@ impl BuiltInFunctionType {
             BuiltInFunctionType::Eval => EVAL,
             BuiltInFunctionType::Include => INCLUDE,
             BuiltInFunctionType::Require => REQUIRE,
-            BuiltInFunctionType::ReadLines => READ_LINES, // to be replaced
             BuiltInFunctionType::ToInt => TO_INT,
             BuiltInFunctionType::ToDouble => TO_DOUBLE,
             BuiltInFunctionType::ToBool => TO_BOOL,
