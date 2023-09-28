@@ -21,7 +21,8 @@ pub struct NativeLibrary {
 }
 
 pub type NativeFunctionCallResult = anyhow::Result<Primitive>;
-pub type Compiler = dyn FnMut(Value, BTreeMap<String, RefPrimitive>) -> NativeFunctionCallResult;
+pub type Compiler =
+    dyn FnMut(Value, BTreeMap<String, RefPrimitive>) -> NativeFunctionCallResult + Send;
 #[allow(improper_ctypes_definitions)]
 pub type NativeFunction<'lib> =
     libloading::Symbol<'lib, fn(Vec<Primitive>, Box<Compiler>) -> NativeFunctionCallResult>;
