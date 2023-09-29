@@ -116,6 +116,8 @@ pub enum Value {
     },
     Null,
     Decimal(f64),
+    U8(u8),
+    I8(i8),
     Integer(i128),
     Bool(bool),
     Range {

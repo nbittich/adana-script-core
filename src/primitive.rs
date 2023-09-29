@@ -63,6 +63,8 @@ impl NativeLibrary {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[repr(C)]
 pub enum Primitive {
+    U8(u8),
+    I8(i8),
     Int(i128),
     Bool(bool),
     Ref(RefPrimitive),
@@ -94,6 +96,8 @@ impl Primitive {
     }
     pub fn to_value(self) -> anyhow::Result<Value> {
         let v = match self {
+            Primitive::U8(u) => Value::U8(u),
+            Primitive::I8(i) => Value::I8(i),
             Primitive::Int(i) => Value::Integer(i),
             Primitive::Bool(b) => Value::Bool(b),
             Primitive::Ref(r) => {
@@ -292,6 +296,8 @@ impl Display for Primitive {
                 let lock = s.read().expect("FMT ERROR: could not acquire lock");
                 write!(f, "{lock}")
             }
+            Primitive::U8(u) => write!(f, "{u}"),
+            Primitive::I8(u) => write!(f, "{u}"),
             Primitive::Int(i) => write!(f, "{i}"),
             Primitive::Double(d) => write!(f, "{d}"),
             Primitive::Bool(b) => write!(f, "{b}"),
@@ -363,6 +369,8 @@ impl Sin for Primitive {
                 let lock = s.read().expect("SIN ERORR: could not acquire lock!");
                 lock.sin()
             }
+            Primitive::U8(i) => Primitive::Double((*i as f64).sin()),
+            Primitive::I8(i) => Primitive::Double((*i as f64).sin()),
             Primitive::Int(i) => Primitive::Double((*i as f64).sin()),
             Primitive::Double(d) => Primitive::Double(d.sin()),
 
@@ -379,7 +387,8 @@ impl Cos for Primitive {
                 let lock = s.read().expect("COS ERORR: could not acquire lock!");
                 lock.cos()
             }
-            Primitive::Int(i) => Primitive::Double((*i as f64).cos()),
+            Primitive::U8(i) => Primitive::Double((*i as f64).cos()),
+            Primitive::I8(i) => Primitive::Double((*i as f64).cos()),
             Primitive::Double(d) => Primitive::Double(d.cos()),
             Primitive::Error(e) => panic!("call to cos() on an error. {e}"),
             _ => Primitive::Error(format!("illegal call to cos() => {self}")),
@@ -394,6 +403,9 @@ impl Tan for Primitive {
                 let lock = s.read().expect("TAN ERORR: could not acquire lock!");
                 lock.tan()
             }
+
+            Primitive::U8(i) => Primitive::Double((*i as f64).tan()),
+            Primitive::I8(i) => Primitive::Double((*i as f64).tan()),
             Primitive::Int(i) => Primitive::Double((*i as f64).tan()),
             Primitive::Double(d) => Primitive::Double(d.tan()),
             Primitive::Error(e) => panic!("call to tan() on an error. {e}"),
@@ -409,6 +421,9 @@ impl Logarithm for Primitive {
                 let lock = s.read().expect("LOG ERORR: could not acquire lock!");
                 lock.log()
             }
+
+            Primitive::U8(i) => Primitive::Double((*i as f64).log10()),
+            Primitive::I8(i) => Primitive::Double((*i as f64).log10()),
             Primitive::Int(i) => Primitive::Double((*i as f64).log10()),
             Primitive::Double(d) => Primitive::Double(d.log10()),
             Primitive::Error(e) => panic!("call to log() on an error. {e}"),
@@ -421,6 +436,9 @@ impl Logarithm for Primitive {
                 let lock = s.read().expect("LN ERORR: could not acquire lock!");
                 lock.ln()
             }
+
+            Primitive::U8(i) => Primitive::Double((*i as f64).ln()),
+            Primitive::I8(i) => Primitive::Double((*i as f64).ln()),
             Primitive::Int(i) => Primitive::Double((*i as f64).ln()),
             Primitive::Double(d) => Primitive::Double(d.ln()),
             Primitive::Error(e) => panic!("call to ln() on an error. {e}"),
@@ -436,6 +454,8 @@ impl Sqrt for Primitive {
                 let lock = s.read().expect("SQRT ERORR: could not acquire lock!");
                 lock.sqrt()
             }
+            Primitive::U8(i) => Primitive::Double((*i as f64).sqrt()),
+            Primitive::I8(i) => Primitive::Double((*i as f64).sqrt()),
             Primitive::Int(i) => Primitive::Double((*i as f64).sqrt()),
             Primitive::Double(d) => Primitive::Double(d.sqrt()),
             Primitive::Error(e) => panic!("call to sqrt() on an error. {e}"),
@@ -450,6 +470,8 @@ impl Abs for Primitive {
                 let lock = s.read().expect("ABS ERORR: could not acquire lock!");
                 lock.abs()
             }
+            Primitive::U8(i) => Primitive::U8(*i),
+            Primitive::I8(i) => Primitive::I8(i.abs()),
             Primitive::Int(i) => Primitive::Int(i.abs()),
             Primitive::Double(d) => Primitive::Double(d.abs()),
             Primitive::Error(e) => panic!("call to abs() on an error. {e}"),
@@ -477,15 +499,42 @@ impl Pow for Primitive {
 
                 l.pow(&r)
             }
+            (Primitive::U8(l), Primitive::U8(r)) => Primitive::Int((*l as i128).pow(*r as u32)),
+            #[allow(clippy::manual_range_contains)]
+            (Primitive::U8(l), Primitive::Int(r)) if r >= &0 && r <= &MAX_U32_AS_I128 => {
+                Primitive::Int((*l as i128).pow(*r as u32))
+            }
+
+            (Primitive::I8(l), Primitive::U8(r)) => Primitive::Int((*l as i128).pow(*r as u32)),
+            #[allow(clippy::manual_range_contains)]
+            (Primitive::I8(l), Primitive::Int(r)) if r >= &0 && r <= &MAX_U32_AS_I128 => {
+                Primitive::Int((*l as i128).pow(*r as u32))
+            }
+
+            (Primitive::U8(l), Primitive::Int(r)) => Primitive::Double((*l as f64).powf(*r as f64)),
+            (Primitive::I8(l), Primitive::Int(r)) => Primitive::Double((*l as f64).powf(*r as f64)),
+            (Primitive::U8(l), Primitive::Double(r)) => {
+                Primitive::Double((*l as f64).powf(*r as f64))
+            }
+            (Primitive::I8(l), Primitive::Double(r)) => {
+                Primitive::Double((*l as f64).powf(*r as f64))
+            }
+
             #[allow(clippy::manual_range_contains)]
             (Primitive::Int(l), Primitive::Int(r)) if r >= &0 && r <= &MAX_U32_AS_I128 => {
                 Primitive::Int(l.pow(*r as u32))
             }
+
+            (Primitive::Int(l), Primitive::U8(r)) => Primitive::Int(l.pow(*r as u32)),
+            (Primitive::Int(l), Primitive::I8(r)) if r >= &0 => Primitive::Int(l.pow(*r as u32)),
+            (Primitive::Int(l), Primitive::I8(r)) => Primitive::Double((*l as f64).powf(*r as f64)),
             (Primitive::Int(l), Primitive::Int(r)) => {
                 Primitive::Double((*l as f64).powf(*r as f64))
             }
             (Primitive::Int(l), Primitive::Double(r)) => Primitive::Double((*l as f64).powf(*r)),
             (Primitive::Double(l), Primitive::Int(r)) => Primitive::Double(l.powf(*r as f64)),
+            (Primitive::Double(l), Primitive::U8(r)) => Primitive::Double(l.powf(*r as f64)),
+            (Primitive::Double(l), Primitive::I8(r)) => Primitive::Double(l.powf(*r as f64)),
             (Primitive::Double(l), Primitive::Double(r)) => Primitive::Double(l.powf(*r)),
             (l, r) => Primitive::Error(format!("illegal call to pow() => left: {l} right: {r}")),
         }
@@ -511,12 +560,29 @@ impl Add for Primitive {
 
                 l.add(&r)
             }
+            (Primitive::U8(l), Primitive::U8(r)) => Primitive::U8(l + r),
+            (Primitive::U8(l), Primitive::I8(r)) => Primitive::I8(l as i8 + r),
+            (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int(l as i128 + r),
+            (Primitive::U8(l), Primitive::String(s)) => Primitive::String(format!("{l}{s}")),
+            (Primitive::U8(l), Primitive::Double(r)) => Primitive::Double(l as f64 + r),
+
+            (Primitive::I8(l), Primitive::I8(r)) => Primitive::I8(l + r),
+            (Primitive::I8(l), Primitive::U8(r)) => Primitive::I8(l + r as i8),
+            (Primitive::I8(l), Primitive::Int(r)) => Primitive::Int(l as i128 + r),
+            (Primitive::I8(l), Primitive::String(s)) => Primitive::String(format!("{l}{s}")),
+            (Primitive::I8(l), Primitive::Double(r)) => Primitive::Double(l as f64 + r),
+
             (Primitive::Int(l), Primitive::Int(r)) => Primitive::Int(l + r),
+            (Primitive::Int(l), Primitive::U8(r)) => Primitive::Int(l + r as i128),
+            (Primitive::Int(l), Primitive::I8(r)) => Primitive::Int(l + r as i128),
             (Primitive::Int(l), Primitive::Double(r)) => Primitive::Double(l as f64 + r),
             (Primitive::Int(l), Primitive::String(s)) => Primitive::String(format!("{l}{s}")),
 
             (Primitive::Double(l), Primitive::Int(r)) => Primitive::Double(l + r as f64),
+            (Primitive::Double(l), Primitive::U8(r)) => Primitive::Double(l + r as f64),
+            (Primitive::Double(l), Primitive::I8(r)) => Primitive::Double(l + r as f64),
             (Primitive::Double(l), Primitive::Double(r)) => Primitive::Double(l + r),
+
             (Primitive::Array(mut l), Primitive::Array(mut r)) => {
                 l.append(&mut r);
                 Primitive::Array(l)
@@ -558,15 +624,30 @@ impl Sub for Primitive {
 
                 l.sub(&r)
             }
+
+            (Primitive::U8(l), Primitive::U8(r)) => Primitive::U8(l - r),
+            (Primitive::U8(l), Primitive::I8(r)) => Primitive::I8(l as i8 - r),
+            (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int(l as i128 - r),
+            (Primitive::U8(l), Primitive::Double(r)) => Primitive::Double(l as f64 - r),
+
+            (Primitive::I8(l), Primitive::I8(r)) => Primitive::I8(l - r),
+            (Primitive::I8(l), Primitive::U8(r)) => Primitive::I8(l - r as i8),
+            (Primitive::I8(l), Primitive::Int(r)) => Primitive::Int(l as i128 - r),
+            (Primitive::I8(l), Primitive::Double(r)) => Primitive::Double(l as f64 - r),
+
             (Primitive::Int(l), Primitive::Int(r)) => Primitive::Int(l - r),
             (Primitive::Int(l), Primitive::Double(r)) => Primitive::Double(l as f64 - r),
+            (Primitive::Int(l), Primitive::U8(r)) => Primitive::Int(l - r as i128),
+            (Primitive::Int(l), Primitive::I8(r)) => Primitive::Int(l - r as i128),
             (Primitive::Double(l), Primitive::Int(r)) => Primitive::Double(l - r as f64),
             (Primitive::Double(l), Primitive::Double(r)) => Primitive::Double(l - r),
+            (Primitive::Double(l), Primitive::U8(r)) => Primitive::Double(l - r as f64),
+            (Primitive::Double(l), Primitive::I8(r)) => Primitive::Double(l - r as f64),
+
             (l, r) => Primitive::Error(format!("illegal call to sub() => left: {l} right: {r}")),
         }
     }
 }
-
 impl Rem for Primitive {
     fn rem(&self, rhs: &Self) -> Self {
         match (self.clone(), rhs.clone()) {
@@ -586,10 +667,27 @@ impl Rem for Primitive {
 
                 l.rem(&r)
             }
+
+            (Primitive::U8(l), Primitive::U8(r)) if r != 0 => Primitive::U8(l % r),
+            (Primitive::U8(l), Primitive::I8(r)) if r != 0 => Primitive::I8(l as i8 % r),
+            (Primitive::U8(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l as i128 % r),
+            (Primitive::U8(l), Primitive::Double(r)) => Primitive::Double(l as f64 % r),
+            (Primitive::U8(_), _) => Primitive::Double(f64::NAN),
+
+            (Primitive::I8(l), Primitive::I8(r)) if r != 0 => Primitive::I8(l % r),
+            (Primitive::I8(l), Primitive::U8(r)) if r != 0 => Primitive::I8(l % r as i8),
+            (Primitive::I8(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l as i128 % r),
+            (Primitive::I8(l), Primitive::Double(r)) => Primitive::Double(l as f64 % r),
+            (Primitive::I8(_), _) => Primitive::Double(f64::NAN),
+
             (Primitive::Int(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l % r),
+            (Primitive::Int(l), Primitive::U8(r)) if r != 0 => Primitive::Int(l % r as i128),
+            (Primitive::Int(l), Primitive::I8(r)) if r != 0 => Primitive::Int(l % r as i128),
             (Primitive::Int(l), Primitive::Double(r)) => Primitive::Double(l as f64 % r),
             (Primitive::Int(_), _) => Primitive::Double(f64::NAN),
 
+            (Primitive::Double(l), Primitive::U8(r)) => Primitive::Double(l % r as f64),
+            (Primitive::Double(l), Primitive::I8(r)) => Primitive::Double(l % r as f64),
             (Primitive::Double(l), Primitive::Int(r)) => Primitive::Double(l % r as f64),
             (Primitive::Double(l), Primitive::Double(r)) => Primitive::Double(l % r),
 
@@ -597,6 +695,8 @@ impl Rem for Primitive {
         }
     }
 }
+
+// todo stopped here
 impl Mul for Primitive {
     fn mul(&self, rhs: &Self) -> Self {
         fn multiply_array(arr: Vec<Primitive>, n: i128) -> Vec<Primitive> {
