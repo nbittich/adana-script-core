@@ -936,10 +936,7 @@ impl Neg for Primitive {
                 let lock = s.read().expect("NEG ERORR: could not acquire lock!");
                 lock.neg()
             }
-            Primitive::U8(n) => match (*n as i8).checked_neg() {
-                Some(u) => Primitive::I8(u),
-                None => Primitive::Int(-(*n as i128)),
-            },
+            Primitive::U8(n) => Primitive::Int(-(*n as i128)),
             Primitive::I8(n) => match n.checked_neg() {
                 Some(u) => Primitive::I8(u),
                 None => Primitive::Int(-(*n as i128)),
