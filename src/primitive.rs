@@ -403,6 +403,7 @@ impl Cos for Primitive {
                 let lock = s.read().expect("COS ERORR: could not acquire lock!");
                 lock.cos()
             }
+            Primitive::Int(i) => Primitive::Double((*i as f64).cos()),
             Primitive::U8(i) => Primitive::Double((*i as f64).cos()),
             Primitive::I8(i) => Primitive::Double((*i as f64).cos()),
             Primitive::Double(d) => Primitive::Double(d.cos()),
