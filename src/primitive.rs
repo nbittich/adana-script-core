@@ -954,7 +954,7 @@ impl Not for Primitive {
                 let lock = s.read().expect("NOT ERORR: could not acquire lock!");
                 lock.not()
             }
-            Primitive::U8(b) => Primitive::U8(!b),
+            Primitive::U8(b) => Primitive::I8(!(*b as i8)),
             Primitive::I8(b) => Primitive::I8(!b),
             Primitive::Int(b) => Primitive::Int(!b),
             _ => Primitive::Error(format!("invalid call to bitwise_not() {self}")),
