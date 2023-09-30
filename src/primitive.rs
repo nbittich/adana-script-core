@@ -206,6 +206,7 @@ pub trait Neg {
 }
 
 pub trait Not {
+    fn bitwise_not(&self) -> Self;
     fn not(&self) -> Self;
 }
 
@@ -938,6 +939,18 @@ impl Not for Primitive {
             }
             Primitive::Bool(b) => Primitive::Bool(!b),
             _ => Primitive::Error(format!("invalid call to not() {self}")),
+        }
+    }
+    fn bitwise_not(&self) -> Self {
+        match self {
+            Primitive::Ref(s) => {
+                let lock = s.read().expect("NOT ERORR: could not acquire lock!");
+                lock.not()
+            }
+            Primitive::U8(b) => Primitive::U8(!b),
+            Primitive::I8(b) => Primitive::I8(!b),
+            Primitive::Int(b) => Primitive::Int(!b),
+            _ => Primitive::Error(format!("invalid call to bitwise_not() {self}")),
         }
     }
 }
