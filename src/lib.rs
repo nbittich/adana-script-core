@@ -283,9 +283,9 @@ impl Operator {
             Operator::And => "&&",
             Operator::Or => "||",
             Operator::BitwiseNot => "~",
-            Operator::BitwiseAnd => "AND",
+            Operator::BitwiseAnd => "@",
             Operator::BitwiseOr => "|",
-            Operator::BitwiseXor => "XOR",
+            Operator::BitwiseXor => "$",
             Operator::BitwiseLShift => "<<",
             Operator::BitwiseRShift => ">>",
         }
