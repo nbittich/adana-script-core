@@ -581,38 +581,14 @@ impl Add for Primitive {
 
                 l.add(&r)
             }
-            (Primitive::U8(l), Primitive::U8(r)) => {
-                if let Some(v) = l.checked_add(r) {
-                    Primitive::U8(v)
-                } else {
-                    Primitive::Int(l as i128 + r as i128)
-                }
-            }
-            (Primitive::U8(l), Primitive::I8(r)) => {
-                if let Some(v) = (l as i8).checked_add(r) {
-                    Primitive::I8(v)
-                } else {
-                    Primitive::Int(l as i128 + r as i128)
-                }
-            }
+            (Primitive::U8(l), Primitive::U8(r)) => Primitive::Int(l as i128 + r as i128),
+            (Primitive::U8(l), Primitive::I8(r)) => Primitive::Int(l as i128 + r as i128),
             (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int(l as i128 + r),
             (Primitive::U8(l), Primitive::String(s)) => Primitive::String(format!("{l}{s}")),
             (Primitive::U8(l), Primitive::Double(r)) => Primitive::Double(l as f64 + r),
 
-            (Primitive::I8(l), Primitive::I8(r)) => {
-                if let Some(v) = l.checked_add(r) {
-                    Primitive::I8(v)
-                } else {
-                    Primitive::Int(l as i128 + r as i128)
-                }
-            }
-            (Primitive::I8(l), Primitive::U8(r)) => {
-                if let Some(v) = l.checked_add(r as i8) {
-                    Primitive::I8(v)
-                } else {
-                    Primitive::Int(l as i128 + r as i128)
-                }
-            }
+            (Primitive::I8(l), Primitive::I8(r)) => Primitive::Int(l as i128 + r as i128),
+            (Primitive::I8(l), Primitive::U8(r)) => Primitive::Int(l as i128 + r as i128),
             (Primitive::I8(l), Primitive::Int(r)) => Primitive::Int(l as i128 + r),
             (Primitive::I8(l), Primitive::String(s)) => Primitive::String(format!("{l}{s}")),
             (Primitive::I8(l), Primitive::Double(r)) => Primitive::Double(l as f64 + r),
