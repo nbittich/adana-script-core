@@ -500,13 +500,20 @@ impl Pow for Primitive {
                 l.pow(&r)
             }
             (Primitive::U8(l), Primitive::U8(r)) => Primitive::Int((*l as i128).pow(*r as u32)),
-            (Primitive::U8(l), Primitive::I8(r)) => Primitive::Int((*l as i128).pow(*r as u32)),
+            (Primitive::U8(l), Primitive::I8(r)) if r > &0 => {
+                Primitive::Int((*l as i128).pow(*r as u32))
+            }
+            (Primitive::U8(l), Primitive::I8(r)) => Primitive::Double((*l as f64).powf(*r as f64)),
             #[allow(clippy::manual_range_contains)]
             (Primitive::U8(l), Primitive::Int(r)) if r >= &0 && r <= &MAX_U32_AS_I128 => {
                 Primitive::Int((*l as i128).pow(*r as u32))
             }
 
-            (Primitive::I8(l), Primitive::I8(r)) => Primitive::Int((*l as i128).pow(*r as u32)),
+            (Primitive::I8(l), Primitive::I8(r)) if r > &0 => {
+                Primitive::Int((*l as i128).pow(*r as u32))
+            }
+            (Primitive::I8(l), Primitive::I8(r)) => Primitive::Double((*l as f64).powf(*r as f64)),
+
             (Primitive::I8(l), Primitive::U8(r)) => Primitive::Int((*l as i128).pow(*r as u32)),
             #[allow(clippy::manual_range_contains)]
             (Primitive::I8(l), Primitive::Int(r)) if r >= &0 && r <= &MAX_U32_AS_I128 => {
