@@ -164,6 +164,7 @@ pub trait Pow {
 
 pub trait And {
     fn and(&self, n: &Self) -> Self;
+    fn bitwise_and(&self, n: &Self) -> Self;
 }
 pub trait Or {
     fn or(&self, n: &Self) -> Self;
@@ -1063,6 +1064,53 @@ impl And for Primitive {
         }
 
         rhs.clone()
+    }
+    fn bitwise_and(&self, rhs: &Self) -> Self {
+        if let (&Primitive::Ref(l), &Primitive::Ref(r)) = (&self, &rhs) {
+            let l = l.read().expect("B_AND L ERROR: could not acquire lock!");
+            let r = r.read().expect("B_AND R ERROR: could not acquire lock!");
+            return l.bitwise_and(&r);
+        } else if let &Primitive::Ref(l) = &self {
+            let l = l.read().expect("B_AND SELF ERROR: could not acquire lock!");
+            return l.bitwise_and(rhs);
+        } else if let &Primitive::Ref(r) = &rhs {
+            let r = r.read().expect("B_AND RHS ERROR: could not acquire lock!");
+            return self.bitwise_and(&r);
+        }
+
+        match (self, rhs) {
+            (Primitive::U8(l), Primitive::U8(r)) => Primitive::U8(l & r),
+            (Primitive::U8(l), Primitive::Bool(r)) => {
+                Primitive::U8(l & if r == &true { 1 } else { 0 })
+            }
+            (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 & r),
+            (Primitive::U8(l), Primitive::I8(r)) => Primitive::I8(*l as i8 & r),
+            (Primitive::I8(l), Primitive::I8(r)) => Primitive::I8(l & r),
+            (Primitive::I8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 & r),
+            (Primitive::I8(l), Primitive::U8(r)) => Primitive::I8(l & *r as i8),
+            (Primitive::I8(l), Primitive::Bool(r)) => {
+                Primitive::I8(l & if r == &true { 1 } else { 0 })
+            }
+            (Primitive::Int(l), Primitive::U8(r)) => Primitive::Int(l & *r as i128),
+            (Primitive::Int(l), Primitive::I8(r)) => Primitive::Int(l & *r as i128),
+            (Primitive::Int(l), Primitive::Int(r)) => Primitive::Int(l & *r),
+            (Primitive::Int(l), Primitive::Bool(r)) => {
+                Primitive::Int(l & if r == &true { 1 } else { 0 })
+            }
+            _ => {
+                return Primitive::Error(format!(
+                    "illegal call to 'bitwise_and' => left: {self} right: {rhs}"
+                ))
+            }
+        }
+
+        // if !matches!((self, &rhs), (Primitive::Bool(_), Primitive::Bool(_))) {
+        //     return Primitive::Error(format!(
+        //         "illegal call to 'bitwise_and' => left: {self} right: {rhs}"
+        //     ));
+        // }
+
+        //rhs.clone()
     }
 }
 
