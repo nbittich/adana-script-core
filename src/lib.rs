@@ -1,7 +1,7 @@
 pub mod primitive;
 use std::collections::BTreeMap;
 
-use constants::REQUIRE;
+use constants::{REQUIRE, TO_BINARY, TO_HEX};
 use primitive::Primitive;
 use serde_derive::{Deserialize, Serialize};
 use strum::EnumCount;
@@ -38,6 +38,8 @@ pub mod constants {
     pub const PI: &str = concat!(pi!());
     pub const EULER_NUMBER: &str = concat!(euler_number!());
     pub const SQRT: &str = "sqrt";
+    pub const TO_HEX: &str = "to_hex";
+    pub const TO_BINARY: &str = "to_binary";
     pub const TO_INT: &str = "to_int";
     pub const TO_BOOL: &str = "to_bool";
     pub const TO_DOUBLE: &str = "to_double";
@@ -173,6 +175,8 @@ pub enum BuiltInFunctionType {
     Sin,
     Cos,
     ToInt,
+    ToBinary,
+    ToHex,
     ToDouble,
     ToBool,
     ToString,
@@ -256,6 +260,8 @@ impl BuiltInFunctionType {
             BuiltInFunctionType::Include => INCLUDE,
             BuiltInFunctionType::Require => REQUIRE,
             BuiltInFunctionType::ToInt => TO_INT,
+            BuiltInFunctionType::ToHex => TO_HEX,
+            BuiltInFunctionType::ToBinary => TO_BINARY,
             BuiltInFunctionType::ToDouble => TO_DOUBLE,
             BuiltInFunctionType::ToBool => TO_BOOL,
             BuiltInFunctionType::ToString => TO_STRING,

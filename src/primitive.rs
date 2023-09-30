@@ -186,6 +186,14 @@ pub trait Logarithm {
     fn ln(&self) -> Self;
 }
 
+pub trait DisplayHex {
+    fn to_hex(&self) -> Self;
+}
+
+pub trait DisplayBinary {
+    fn to_binary(&self) -> Self;
+}
+
 pub trait Sin {
     fn sin(&self) -> Self;
 }
@@ -1759,6 +1767,48 @@ impl PartialEq for Primitive {
             ) => l_parameters == r_parameters && l_exprs == r_exprs,
             (Self::EarlyReturn(l0), Self::EarlyReturn(r0)) => l0 == r0,
             _ => core::mem::discriminant(self) == core::mem::discriminant(other),
+        }
+    }
+}
+impl DisplayHex for Primitive {
+    fn to_hex(&self) -> Self {
+        match self {
+            Primitive::U8(u) => Primitive::String(format!("{u:#x}")),
+            Primitive::I8(u) => Primitive::String(format!("{u:#x}")),
+            Primitive::Int(u) => Primitive::String(format!("{u:#x}")),
+
+            Primitive::Ref(l0) => {
+                let l0 = l0.read().expect("EQ L ERORR: could not acquire lock!");
+                l0.to_hex()
+            }
+            Primitive::Double(d) => {
+                let bytes = d.to_ne_bytes();
+                let u = i64::from_ne_bytes(bytes);
+                Primitive::String(format!("{u:#x}"))
+            }
+
+            e => Primitive::Error(format!("could not convert to_hex: {e}")),
+        }
+    }
+}
+impl DisplayBinary for Primitive {
+    fn to_binary(&self) -> Self {
+        match self {
+            Primitive::U8(u) => Primitive::String(format!("{u:#b}")),
+            Primitive::I8(u) => Primitive::String(format!("{u:#b}")),
+            Primitive::Int(u) => Primitive::String(format!("{u:#b}")),
+
+            Primitive::Ref(l0) => {
+                let l0 = l0.read().expect("EQ L ERORR: could not acquire lock!");
+                l0.to_hex()
+            }
+            Primitive::Double(d) => {
+                let bytes = d.to_ne_bytes();
+                let u = i64::from_ne_bytes(bytes);
+                Primitive::String(format!("{u:#b}"))
+            }
+
+            e => Primitive::Error(format!("could not convert to_binary: {e}")),
         }
     }
 }
