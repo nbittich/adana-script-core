@@ -151,6 +151,10 @@ impl Primitive {
 pub trait TypeOf {
     fn type_of(&self) -> Self;
 }
+pub trait BitShift {
+    fn left_shift(&self, n: &Self) -> Self;
+    fn right_shift(&self, n: &Self) -> Self;
+}
 pub trait ToBool {
     fn to_bool(&self) -> Self;
 }
@@ -1020,6 +1024,105 @@ impl ToNumber for Primitive {
         }
     }
 }
+
+impl BitShift for Primitive {
+    fn right_shift(&self, rhs: &Self) -> Self {
+        if let (&Primitive::Ref(l), &Primitive::Ref(r)) = (&self, &rhs) {
+            let l = l
+                .read()
+                .expect("B_R_SHIFT L ERROR: could not acquire lock!");
+            let r = r
+                .read()
+                .expect("B_R_SHIFT R ERROR: could not acquire lock!");
+            return l.right_shift(&r);
+        } else if let &Primitive::Ref(l) = &self {
+            let l = l
+                .read()
+                .expect("B_R_SHIFT SELF ERROR: could not acquire lock!");
+            return l.right_shift(rhs);
+        } else if let &Primitive::Ref(r) = &rhs {
+            let r = r
+                .read()
+                .expect("B_R_SHIFT RHS ERROR: could not acquire lock!");
+            return self.right_shift(&r);
+        }
+
+        match (self, rhs) {
+            (Primitive::U8(l), Primitive::U8(r)) => Primitive::U8(l >> r),
+            (Primitive::U8(l), Primitive::Bool(r)) => {
+                Primitive::U8(l >> if r == &true { 1 } else { 0 })
+            }
+            (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 >> r),
+            (Primitive::U8(l), Primitive::I8(r)) => Primitive::I8(*l as i8 >> r),
+            (Primitive::I8(l), Primitive::I8(r)) => Primitive::I8(l >> r),
+            (Primitive::I8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 >> r),
+            (Primitive::I8(l), Primitive::U8(r)) => Primitive::I8(l >> *r as i8),
+            (Primitive::I8(l), Primitive::Bool(r)) => {
+                Primitive::I8(l >> if r == &true { 1 } else { 0 })
+            }
+            (Primitive::Int(l), Primitive::U8(r)) => Primitive::Int(l >> *r as i128),
+            (Primitive::Int(l), Primitive::I8(r)) => Primitive::Int(l >> *r as i128),
+            (Primitive::Int(l), Primitive::Int(r)) => Primitive::Int(l >> *r),
+            (Primitive::Int(l), Primitive::Bool(r)) => {
+                Primitive::Int(l >> if r == &true { 1 } else { 0 })
+            }
+            _ => {
+                return Primitive::Error(format!(
+                    "illegal call to 'r_shift' => left: {self} right: {rhs}"
+                ))
+            }
+        }
+    }
+
+    fn left_shift(&self, rhs: &Self) -> Self {
+        if let (&Primitive::Ref(l), &Primitive::Ref(r)) = (&self, &rhs) {
+            let l = l
+                .read()
+                .expect("B_L_SHIFT L ERROR: could not acquire lock!");
+            let r = r
+                .read()
+                .expect("B_L_SHIFT R ERROR: could not acquire lock!");
+            return l.left_shift(&r);
+        } else if let &Primitive::Ref(l) = &self {
+            let l = l
+                .read()
+                .expect("B_L_SHIFT SELF ERROR: could not acquire lock!");
+            return l.left_shift(rhs);
+        } else if let &Primitive::Ref(r) = &rhs {
+            let r = r
+                .read()
+                .expect("B_L_SHIFT RHS ERROR: could not acquire lock!");
+            return self.left_shift(&r);
+        }
+
+        match (self, rhs) {
+            (Primitive::U8(l), Primitive::U8(r)) => Primitive::U8(l << r),
+            (Primitive::U8(l), Primitive::Bool(r)) => {
+                Primitive::U8(l << if r == &true { 1 } else { 0 })
+            }
+            (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int((*l as i128) << r),
+            (Primitive::U8(l), Primitive::I8(r)) => Primitive::I8((*l as i8) << r),
+            (Primitive::I8(l), Primitive::I8(r)) => Primitive::I8(l << r),
+            (Primitive::I8(l), Primitive::Int(r)) => Primitive::Int((*l as i128) << r),
+            (Primitive::I8(l), Primitive::U8(r)) => Primitive::I8(l << *r as i8),
+            (Primitive::I8(l), Primitive::Bool(r)) => {
+                Primitive::I8(l << if r == &true { 1 } else { 0 })
+            }
+            (Primitive::Int(l), Primitive::U8(r)) => Primitive::Int(l << *r as i128),
+            (Primitive::Int(l), Primitive::I8(r)) => Primitive::Int(l << *r as i128),
+            (Primitive::Int(l), Primitive::Int(r)) => Primitive::Int(l << *r),
+            (Primitive::Int(l), Primitive::Bool(r)) => {
+                Primitive::Int(l << if r == &true { 1 } else { 0 })
+            }
+            _ => {
+                return Primitive::Error(format!(
+                    "illegal call to 'l_shift' => left: {self} right: {rhs}"
+                ))
+            }
+        }
+    }
+}
+
 impl Or for Primitive {
     fn or(&self, rhs: &Self) -> Self {
         if let (&Primitive::Ref(l), &Primitive::Ref(r)) = (&self, &rhs) {
@@ -1046,13 +1149,13 @@ impl Or for Primitive {
         if let (&Primitive::Ref(l), &Primitive::Ref(r)) = (&self, &rhs) {
             let l = l.read().expect("B_OR L ERROR: could not acquire lock!");
             let r = r.read().expect("B_OR R ERROR: could not acquire lock!");
-            return l.or(&r);
+            return l.bitwise_or(&r);
         } else if let &Primitive::Ref(l) = &self {
             let l = l.read().expect("B_OR SELF ERROR: could not acquire lock!");
-            return l.or(rhs);
+            return l.bitwise_or(rhs);
         } else if let &Primitive::Ref(r) = &rhs {
             let r = r.read().expect("B_OR RHS ERROR: could not acquire lock!");
-            return self.or(&r);
+            return self.bitwise_or(&r);
         }
 
         match (self, rhs) {
@@ -1086,13 +1189,13 @@ impl Or for Primitive {
         if let (&Primitive::Ref(l), &Primitive::Ref(r)) = (&self, &rhs) {
             let l = l.read().expect("B_XOR L ERROR: could not acquire lock!");
             let r = r.read().expect("B_XOR R ERROR: could not acquire lock!");
-            return l.or(&r);
+            return l.bitwise_xor(&r);
         } else if let &Primitive::Ref(l) = &self {
             let l = l.read().expect("B_XOR SELF ERROR: could not acquire lock!");
-            return l.or(rhs);
+            return l.bitwise_xor(rhs);
         } else if let &Primitive::Ref(r) = &rhs {
             let r = r.read().expect("B_XOR RHS ERROR: could not acquire lock!");
-            return self.or(&r);
+            return self.bitwise_xor(&r);
         }
 
         match (self, rhs) {
