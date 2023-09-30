@@ -205,6 +205,12 @@ pub enum Operator {
     NotEqual,
     And,
     Or,
+    BitwiseNot,
+    BitwiseAnd,
+    BitwiseOr,
+    BitwiseXor,
+    BitwiseLShift,
+    BitwiseRShift,
 }
 
 #[derive(Debug)]
@@ -276,6 +282,12 @@ impl Operator {
             Operator::NotEqual => "!=",
             Operator::And => "&&",
             Operator::Or => "||",
+            Operator::BitwiseNot => "~",
+            Operator::BitwiseAnd => "&",
+            Operator::BitwiseOr => "|",
+            Operator::BitwiseXor => "XOR",
+            Operator::BitwiseLShift => "<<",
+            Operator::BitwiseRShift => ">>",
         }
     }
 }
