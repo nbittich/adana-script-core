@@ -864,20 +864,8 @@ impl Div for Primitive {
                 l.div(&r)
             }
 
-            (Primitive::U8(l), Primitive::U8(r)) if r != 0 => {
-                if let Some(v) = l.checked_div(r) {
-                    Primitive::U8(v)
-                } else {
-                    Primitive::Int(l as i128 / r as i128)
-                }
-            }
-            (Primitive::U8(l), Primitive::I8(r)) if r != 0 => {
-                if let Some(v) = (l as i8).checked_div(r) {
-                    Primitive::I8(v)
-                } else {
-                    Primitive::Int(l as i128 / r as i128)
-                }
-            }
+            (Primitive::U8(l), Primitive::U8(r)) if r != 0 => Primitive::Int(l as i128 / r as i128),
+            (Primitive::U8(l), Primitive::I8(r)) if r != 0 => Primitive::Int(l as i128 / r as i128),
             (Primitive::U8(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l as i128 / r),
             (Primitive::U8(l), Primitive::Double(r)) => Primitive::Double(l as f64 / r),
             (Primitive::U8(l), Primitive::Int(_)) if l >= 1 => Primitive::Double(f64::INFINITY),
@@ -885,20 +873,8 @@ impl Div for Primitive {
             (Primitive::U8(l), Primitive::I8(_)) if l >= 1 => Primitive::Double(f64::INFINITY),
             (Primitive::U8(_), _) => Primitive::Double(f64::NAN),
 
-            (Primitive::I8(l), Primitive::U8(r)) if r != 0 => {
-                if let Some(v) = l.checked_div(r as i8) {
-                    Primitive::I8(v)
-                } else {
-                    Primitive::Int(l as i128 / r as i128)
-                }
-            }
-            (Primitive::I8(l), Primitive::I8(r)) if r != 0 => {
-                if let Some(v) = l.checked_div(r) {
-                    Primitive::I8(v)
-                } else {
-                    Primitive::Int(l as i128 / r as i128)
-                }
-            }
+            (Primitive::I8(l), Primitive::U8(r)) if r != 0 => Primitive::Int(l as i128 / r as i128),
+            (Primitive::I8(l), Primitive::I8(r)) if r != 0 => Primitive::Int(l as i128 / r as i128),
             (Primitive::I8(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l as i128 / r),
             (Primitive::I8(l), Primitive::Double(r)) => Primitive::Double(l as f64 / r),
             (Primitive::I8(l), Primitive::Int(_)) if l >= 1 => Primitive::Double(f64::INFINITY),
