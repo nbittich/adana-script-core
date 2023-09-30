@@ -639,6 +639,7 @@ impl Sub for Primitive {
             (Primitive::Int(l), Primitive::Double(r)) => Primitive::Double(l as f64 - r),
             (Primitive::Int(l), Primitive::U8(r)) => Primitive::Int(l - r as i128),
             (Primitive::Int(l), Primitive::I8(r)) => Primitive::Int(l - r as i128),
+
             (Primitive::Double(l), Primitive::Int(r)) => Primitive::Double(l - r as f64),
             (Primitive::Double(l), Primitive::Double(r)) => Primitive::Double(l - r),
             (Primitive::Double(l), Primitive::U8(r)) => Primitive::Double(l - r as f64),
@@ -696,7 +697,6 @@ impl Rem for Primitive {
     }
 }
 
-// todo stopped here
 impl Mul for Primitive {
     fn mul(&self, rhs: &Self) -> Self {
         fn multiply_array(arr: Vec<Primitive>, n: i128) -> Vec<Primitive> {
@@ -723,13 +723,53 @@ impl Mul for Primitive {
 
                 l.mul(&r)
             }
+
+            (Primitive::U8(l), Primitive::U8(r)) if r != 0 => Primitive::U8(l * r),
+            (Primitive::U8(l), Primitive::I8(r)) if r != 0 => Primitive::I8(l as i8 * r),
+            (Primitive::U8(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l as i128 * r),
+            (Primitive::U8(l), Primitive::Double(r)) => Primitive::Double(l as f64 * r),
+            (Primitive::U8(l), Primitive::Array(r)) => {
+                Primitive::Array(multiply_array(r, l as i128))
+            }
+
+            (Primitive::I8(l), Primitive::I8(r)) if r != 0 => Primitive::I8(l * r),
+            (Primitive::I8(l), Primitive::U8(r)) if r != 0 => Primitive::I8(l * r as i8),
+            (Primitive::I8(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l as i128 * r),
+            (Primitive::I8(l), Primitive::Double(r)) => Primitive::Double(l as f64 * r),
+            (Primitive::I8(l), Primitive::Array(r)) if l >= 0 => {
+                Primitive::Array(multiply_array(r, l as i128))
+            }
+
             (Primitive::Int(l), Primitive::Int(r)) => Primitive::Int(l.wrapping_mul(r)),
+            (Primitive::Int(l), Primitive::U8(r)) => Primitive::Int(l * r as i128),
+            (Primitive::Int(l), Primitive::I8(r)) => Primitive::Int(l * r as i128),
             (Primitive::Int(l), Primitive::Double(r)) => Primitive::Double(l as f64 * r),
-            (Primitive::Int(l), Primitive::Array(r)) => Primitive::Array(multiply_array(r, l)),
+            (Primitive::Int(l), Primitive::Array(r)) if l >= 0 => {
+                Primitive::Array(multiply_array(r, l))
+            }
+
             (Primitive::Double(l), Primitive::Int(r)) => Primitive::Double(l * r as f64),
+            (Primitive::Double(l), Primitive::U8(r)) => Primitive::Double(l * r as f64),
+            (Primitive::Double(l), Primitive::I8(r)) => Primitive::Double(l * r as f64),
             (Primitive::Double(l), Primitive::Double(r)) => Primitive::Double(l * r),
-            (Primitive::String(l), Primitive::Int(r)) => Primitive::String(l.repeat(r as usize)),
-            (Primitive::Array(l), Primitive::Int(n)) => Primitive::Array(multiply_array(l, n)),
+
+            (Primitive::String(l), Primitive::Int(r)) if r >= 0 => {
+                Primitive::String(l.repeat(r as usize))
+            }
+            (Primitive::String(l), Primitive::U8(r)) => Primitive::String(l.repeat(r as usize)),
+            (Primitive::String(l), Primitive::I8(r)) if r >= 0 => {
+                Primitive::String(l.repeat(r as usize))
+            }
+
+            (Primitive::Array(l), Primitive::Int(n)) if n >= 0 => {
+                Primitive::Array(multiply_array(l, n))
+            }
+            (Primitive::Array(l), Primitive::U8(n)) => {
+                Primitive::Array(multiply_array(l, n as i128))
+            }
+            (Primitive::Array(l), Primitive::I8(n)) if n >= 0 => {
+                Primitive::Array(multiply_array(l, n as i128))
+            }
 
             (l, r) => Primitive::Error(format!("illegal call to mul() => left: {l} right: {r}")),
         }
@@ -754,12 +794,39 @@ impl Div for Primitive {
 
                 l.div(&r)
             }
+
+            (Primitive::U8(l), Primitive::U8(r)) if r != 0 => Primitive::U8(l / r),
+            (Primitive::U8(l), Primitive::I8(r)) if r != 0 => Primitive::I8(l as i8 / r),
+            (Primitive::U8(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l as i128 / r),
+            (Primitive::U8(l), Primitive::Double(r)) => Primitive::Double(l as f64 / r),
+            (Primitive::U8(l), Primitive::Int(_)) if l >= 1 => Primitive::Double(f64::INFINITY),
+            (Primitive::U8(l), Primitive::U8(_)) if l >= 1 => Primitive::Double(f64::INFINITY),
+            (Primitive::U8(l), Primitive::I8(_)) if l >= 1 => Primitive::Double(f64::INFINITY),
+            (Primitive::U8(_), _) => Primitive::Double(f64::NAN),
+
+            (Primitive::I8(l), Primitive::I8(r)) if r != 0 => Primitive::I8(l / r),
+            (Primitive::I8(l), Primitive::U8(r)) if r != 0 => Primitive::I8(l / r as i8),
+            (Primitive::I8(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l as i128 / r),
+            (Primitive::I8(l), Primitive::Double(r)) => Primitive::Double(l as f64 / r),
+            (Primitive::I8(l), Primitive::Int(_)) if l >= 1 => Primitive::Double(f64::INFINITY),
+            (Primitive::I8(l), Primitive::U8(_)) if l >= 1 => Primitive::Double(f64::INFINITY),
+            (Primitive::I8(l), Primitive::I8(_)) if l >= 1 => Primitive::Double(f64::INFINITY),
+            (Primitive::I8(_), _) => Primitive::Double(f64::NAN),
+
             (Primitive::Int(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l / r),
+            (Primitive::Int(l), Primitive::U8(r)) if r != 0 => Primitive::Int(l / r as i128),
+            (Primitive::Int(l), Primitive::I8(r)) if r != 0 => Primitive::Int(l / r as i128),
             (Primitive::Int(l), Primitive::Double(r)) => Primitive::Double(l as f64 / r),
             (Primitive::Int(l), Primitive::Int(_)) if l >= 1 => Primitive::Double(f64::INFINITY),
+            (Primitive::Int(l), Primitive::U8(_)) if l >= 1 => Primitive::Double(f64::INFINITY),
+            (Primitive::Int(l), Primitive::I8(_)) if l >= 1 => Primitive::Double(f64::INFINITY),
             (Primitive::Int(_), _) => Primitive::Double(f64::NAN),
+
             (Primitive::Double(l), Primitive::Int(r)) => Primitive::Double(l / r as f64),
+            (Primitive::Double(l), Primitive::U8(r)) => Primitive::Double(l / r as f64),
+            (Primitive::Double(l), Primitive::I8(r)) => Primitive::Double(l / r as f64),
             (Primitive::Double(l), Primitive::Double(r)) => Primitive::Double(l / r),
+
             (l, r) => Primitive::Error(format!("illegal call to div() => left: {l} right: {r}")),
         }
     }
@@ -772,6 +839,8 @@ impl Neg for Primitive {
                 let lock = s.read().expect("NEG ERORR: could not acquire lock!");
                 lock.neg()
             }
+            Primitive::U8(n) => Primitive::I8(-(*n as i8)),
+            Primitive::I8(n) => Primitive::I8(-n),
             Primitive::Int(n) => Primitive::Int(-n),
             Primitive::Double(n) => Primitive::Double(-n),
             _ => Primitive::Error(format!("invalid call to neg() {self}")),
@@ -801,6 +870,8 @@ impl ToBool for Primitive {
             }
             v @ Primitive::Bool(_) => v.clone(),
             Primitive::Double(n) => Primitive::Bool(n > &0.0),
+            Primitive::U8(n) => Primitive::Bool(n > &0),
+            Primitive::I8(n) => Primitive::Bool(n > &0),
             Primitive::Int(n) => Primitive::Bool(n > &0),
             Primitive::Null => Primitive::Bool(false),
             Primitive::Array(a) => Primitive::Bool(!a.is_empty()),
@@ -821,6 +892,8 @@ impl ToNumber for Primitive {
                 lock.to_int()
             }
             v @ Primitive::Int(_) => v.clone(),
+            v @ Primitive::U8(_) => v.clone(),
+            v @ Primitive::I8(_) => v.clone(),
             Primitive::Bool(false) => Primitive::Int(0),
             Primitive::Bool(true) => Primitive::Int(1),
             Primitive::Double(d) => Primitive::Int(*d as i128),
@@ -838,6 +911,8 @@ impl ToNumber for Primitive {
                 let lock = s.read().expect("TO_DOUBLE ERORR: could not acquire lock!");
                 lock.to_double()
             }
+            Primitive::U8(d) => Primitive::Double(*d as f64),
+            Primitive::I8(d) => Primitive::Double(*d as f64),
             Primitive::Int(d) => Primitive::Double(*d as f64),
             v @ Primitive::Double(_) => v.clone(),
             Primitive::String(s) => match s.parse::<f64>() {
@@ -927,10 +1002,27 @@ impl PartialOrd for Primitive {
 
                 l.partial_cmp(&r)
             }
+
+            (Primitive::U8(l), Primitive::U8(r)) => l.partial_cmp(r),
+            (Primitive::U8(l), Primitive::I8(r)) => (*l as i8).partial_cmp(r),
+            (Primitive::U8(l), Primitive::Int(r)) => (*l as i128).partial_cmp(r),
+            (Primitive::U8(l), Primitive::Double(r)) => (*l as f64).partial_cmp(r),
+
+            (Primitive::I8(l), Primitive::U8(r)) => l.partial_cmp(&(*r as i8)),
+            (Primitive::I8(l), Primitive::I8(r)) => (*l as i8).partial_cmp(r),
+            (Primitive::I8(l), Primitive::Int(r)) => (*l as i128).partial_cmp(r),
+            (Primitive::I8(l), Primitive::Double(r)) => (*l as f64).partial_cmp(r),
+
             (Primitive::Int(l), Primitive::Int(r)) => l.partial_cmp(r),
+            (Primitive::Int(l), Primitive::U8(r)) => l.partial_cmp(&(*r as i128)),
+            (Primitive::Int(l), Primitive::I8(r)) => l.partial_cmp(&(*r as i128)),
             (Primitive::Int(l), Primitive::Double(r)) => (*l as f64).partial_cmp(r),
+
             (Primitive::Double(l), Primitive::Int(r)) => l.partial_cmp(&(*r as f64)),
+            (Primitive::Double(l), Primitive::U8(r)) => l.partial_cmp(&(*r as f64)),
+            (Primitive::Double(l), Primitive::I8(r)) => l.partial_cmp(&(*r as f64)),
             (Primitive::Double(l), Primitive::Double(r)) => l.partial_cmp(r),
+
             (Primitive::Bool(a), Primitive::Bool(b)) => a.partial_cmp(b),
             (l @ Primitive::Bool(_), r) => l.partial_cmp(&(r.to_bool())),
 
@@ -969,6 +1061,8 @@ impl PartialOrd for Primitive {
             (Primitive::NativeFunction(_, _), _) | (_, Primitive::NativeFunction(_, _)) => None,
             (Primitive::Struct(_), _) => None,
             (Primitive::Int(_), _) => None,
+            (Primitive::U8(_), _) => None,
+            (Primitive::I8(_), _) => None,
             (Primitive::Double(_), _) => None,
             (Primitive::String(_), _) => None,
             (Primitive::NoReturn, _) => None,
@@ -994,6 +1088,8 @@ impl TypeOf for Primitive {
                 let l = l.read().expect("TYPE_OF ERROR: could not acquire lock!");
                 l.type_of()
             }
+            Primitive::U8(_) => Primitive::String("u8".to_string()),
+            Primitive::I8(_) => Primitive::String("i8".to_string()),
             Primitive::Int(_) => Primitive::String("int".to_string()),
             Primitive::Bool(_) => Primitive::String("bool".to_string()),
             Primitive::Null => Primitive::String("null".to_string()),
@@ -1032,7 +1128,7 @@ impl Array for Primitive {
 
                 l.index_at(&r)
             }
-            (Primitive::Array(arr), Primitive::Int(idx)) => {
+            (Primitive::Array(arr), Primitive::Int(idx)) if idx >= &0 => {
                 let idx = *idx as usize;
                 if idx < arr.len() {
                     arr[idx].clone()
@@ -1040,7 +1136,41 @@ impl Array for Primitive {
                     Primitive::Error("index out of range".to_string())
                 }
             }
-            (Primitive::String(s), Primitive::Int(idx)) => {
+            (Primitive::Array(arr), Primitive::U8(idx)) => {
+                let idx = *idx as usize;
+                if idx < arr.len() {
+                    arr[idx].clone()
+                } else {
+                    Primitive::Error("index out of range".to_string())
+                }
+            }
+            (Primitive::Array(arr), Primitive::I8(idx)) if idx >= &0 => {
+                let idx = *idx as usize;
+                if idx < arr.len() {
+                    arr[idx].clone()
+                } else {
+                    Primitive::Error("index out of range".to_string())
+                }
+            }
+            (Primitive::String(s), Primitive::Int(idx)) if idx >= &0 => {
+                let idx = *idx as usize;
+                if idx < s.len() {
+                    let s: String = s.chars().skip(idx).take(1).collect();
+                    Primitive::String(s)
+                } else {
+                    Primitive::Error("index out of range".to_string())
+                }
+            }
+            (Primitive::String(s), Primitive::U8(idx)) => {
+                let idx = *idx as usize;
+                if idx < s.len() {
+                    let s: String = s.chars().skip(idx).take(1).collect();
+                    Primitive::String(s)
+                } else {
+                    Primitive::Error("index out of range".to_string())
+                }
+            }
+            (Primitive::String(s), Primitive::I8(idx)) if idx >= &0 => {
                 let idx = *idx as usize;
                 if idx < s.len() {
                     let s: String = s.chars().skip(idx).take(1).collect();
@@ -1102,7 +1232,26 @@ impl Array for Primitive {
 
                 l.swap_mem(rhs, &index)
             }
-            (Primitive::Array(arr), Primitive::Int(idx)) => {
+            (Primitive::Array(arr), Primitive::Int(idx)) if idx >= &0 => {
+                let idx = *idx as usize;
+                if !matches!(rhs, Primitive::Error(_) | Primitive::Unit) && idx < arr.len() {
+                    std::mem::swap(&mut arr[idx], rhs);
+                    arr[idx].clone()
+                } else {
+                    Primitive::Error("index out of range".to_string())
+                }
+            }
+
+            (Primitive::Array(arr), Primitive::U8(idx)) => {
+                let idx = *idx as usize;
+                if !matches!(rhs, Primitive::Error(_) | Primitive::Unit) && idx < arr.len() {
+                    std::mem::swap(&mut arr[idx], rhs);
+                    arr[idx].clone()
+                } else {
+                    Primitive::Error("index out of range".to_string())
+                }
+            }
+            (Primitive::Array(arr), Primitive::I8(idx)) if idx >= &0 => {
                 let idx = *idx as usize;
                 if !matches!(rhs, Primitive::Error(_) | Primitive::Unit) && idx < arr.len() {
                     std::mem::swap(&mut arr[idx], rhs);
@@ -1119,7 +1268,27 @@ impl Array for Primitive {
                 }
                 s[k].clone()
             }
-            (Primitive::String(s), Primitive::Int(idx)) => {
+            (Primitive::String(s), Primitive::Int(idx)) if idx >= &0 => {
+                let idx = *idx as usize;
+                if !matches!(rhs, Primitive::Error(_) | Primitive::Unit) && idx < s.len() {
+                    s.remove(idx);
+                    s.insert_str(idx, &rhs.to_string());
+                    rhs.clone()
+                } else {
+                    Primitive::Error("index out of range".to_string())
+                }
+            }
+            (Primitive::String(s), Primitive::I8(idx)) if idx >= &0 => {
+                let idx = *idx as usize;
+                if !matches!(rhs, Primitive::Error(_) | Primitive::Unit) && idx < s.len() {
+                    s.remove(idx);
+                    s.insert_str(idx, &rhs.to_string());
+                    rhs.clone()
+                } else {
+                    Primitive::Error("index out of range".to_string())
+                }
+            }
+            (Primitive::String(s), Primitive::U8(idx)) => {
                 let idx = *idx as usize;
                 if !matches!(rhs, Primitive::Error(_) | Primitive::Unit) && idx < s.len() {
                     s.remove(idx);
@@ -1156,7 +1325,7 @@ impl Array for Primitive {
 
                 l.remove(&index)
             }
-            (Primitive::Array(arr), Primitive::Int(idx)) => {
+            (Primitive::Array(arr), Primitive::Int(idx)) if idx >= &0 => {
                 let idx = *idx as usize;
                 if idx < arr.len() {
                     arr.remove(idx);
@@ -1165,7 +1334,44 @@ impl Array for Primitive {
                     Err(anyhow::Error::msg("index out of range"))
                 }
             }
-            (Primitive::String(s), Primitive::Int(idx)) => {
+            (Primitive::Array(arr), Primitive::U8(idx)) => {
+                let idx = *idx as usize;
+                if idx < arr.len() {
+                    arr.remove(idx);
+                    Ok(())
+                } else {
+                    Err(anyhow::Error::msg("index out of range"))
+                }
+            }
+            (Primitive::Array(arr), Primitive::I8(idx)) if idx >= &0 => {
+                let idx = *idx as usize;
+                if idx < arr.len() {
+                    arr.remove(idx);
+                    Ok(())
+                } else {
+                    Err(anyhow::Error::msg("index out of range"))
+                }
+            }
+
+            (Primitive::String(s), Primitive::U8(idx)) => {
+                let idx = *idx as usize;
+                if idx < s.len() {
+                    s.remove(idx);
+                    Ok(())
+                } else {
+                    Err(anyhow::Error::msg("index out of range"))
+                }
+            }
+            (Primitive::String(s), Primitive::I8(idx)) if idx >= &0 => {
+                let idx = *idx as usize;
+                if idx < s.len() {
+                    s.remove(idx);
+                    Ok(())
+                } else {
+                    Err(anyhow::Error::msg("index out of range"))
+                }
+            }
+            (Primitive::String(s), Primitive::Int(idx)) if idx >= &0 => {
                 let idx = *idx as usize;
                 if idx < s.len() {
                     s.remove(idx);
@@ -1213,6 +1419,8 @@ impl PartialEq for Primitive {
                 let r = r.read().expect("EQ R ERORR: could not acquire lock!");
                 self.eq(&r)
             }
+            (Self::U8(l0), Self::U8(r0)) => l0 == r0,
+            (Self::I8(l0), Self::I8(r0)) => l0 == r0,
             (Self::Int(l0), Self::Int(r0)) => l0 == r0,
             (Self::Bool(l0), Self::Bool(r0)) => l0 == r0,
             (Self::Double(l0), Self::Double(r0)) => l0 == r0,
