@@ -283,7 +283,7 @@ impl Operator {
             Operator::And => "&&",
             Operator::Or => "||",
             Operator::BitwiseNot => "~",
-            Operator::BitwiseAnd => "&",
+            Operator::BitwiseAnd => "AND",
             Operator::BitwiseOr => "|",
             Operator::BitwiseXor => "XOR",
             Operator::BitwiseLShift => "<<",
