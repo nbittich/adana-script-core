@@ -936,9 +936,8 @@ impl Neg for Primitive {
                 let lock = s.read().expect("NEG ERORR: could not acquire lock!");
                 lock.neg()
             }
-            Primitive::U8(n) if n == &u8::MAX => Primitive::Int(-(*n as i128)),
+            Primitive::U8(n) if *n > i8::MAX as u8 => Primitive::Int(-(*n as i128)),
             Primitive::U8(n) => Primitive::I8(-(*n as i8)),
-            Primitive::I8(n) if n == &i8::MAX => Primitive::Int(-(*n as i128)),
             Primitive::I8(n) => Primitive::I8(-(*n as i8)),
 
             Primitive::Int(n) => Primitive::Int(-n),
