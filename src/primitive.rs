@@ -169,6 +169,7 @@ pub trait And {
 pub trait Or {
     fn or(&self, n: &Self) -> Self;
     fn bitwise_or(&self, n: &Self) -> Self;
+    fn bitwise_xor(&self, n: &Self) -> Self;
 }
 pub trait Sqrt {
     fn sqrt(&self) -> Self;
@@ -1043,14 +1044,14 @@ impl Or for Primitive {
 
     fn bitwise_or(&self, rhs: &Self) -> Self {
         if let (&Primitive::Ref(l), &Primitive::Ref(r)) = (&self, &rhs) {
-            let l = l.read().expect("OR L ERROR: could not acquire lock!");
-            let r = r.read().expect("OR R ERROR: could not acquire lock!");
+            let l = l.read().expect("B_OR L ERROR: could not acquire lock!");
+            let r = r.read().expect("B_OR R ERROR: could not acquire lock!");
             return l.or(&r);
         } else if let &Primitive::Ref(l) = &self {
-            let l = l.read().expect("OR SELF ERROR: could not acquire lock!");
+            let l = l.read().expect("B_OR SELF ERROR: could not acquire lock!");
             return l.or(rhs);
         } else if let &Primitive::Ref(r) = &rhs {
-            let r = r.read().expect("OR RHS ERROR: could not acquire lock!");
+            let r = r.read().expect("B_OR RHS ERROR: could not acquire lock!");
             return self.or(&r);
         }
 
@@ -1076,6 +1077,46 @@ impl Or for Primitive {
             _ => {
                 return Primitive::Error(format!(
                     "illegal call to 'bitwise_or' => left: {self} right: {rhs}"
+                ))
+            }
+        }
+    }
+
+    fn bitwise_xor(&self, rhs: &Self) -> Self {
+        if let (&Primitive::Ref(l), &Primitive::Ref(r)) = (&self, &rhs) {
+            let l = l.read().expect("B_XOR L ERROR: could not acquire lock!");
+            let r = r.read().expect("B_XOR R ERROR: could not acquire lock!");
+            return l.or(&r);
+        } else if let &Primitive::Ref(l) = &self {
+            let l = l.read().expect("B_XOR SELF ERROR: could not acquire lock!");
+            return l.or(rhs);
+        } else if let &Primitive::Ref(r) = &rhs {
+            let r = r.read().expect("B_XOR RHS ERROR: could not acquire lock!");
+            return self.or(&r);
+        }
+
+        match (self, rhs) {
+            (Primitive::U8(l), Primitive::U8(r)) => Primitive::U8(l ^ r),
+            (Primitive::U8(l), Primitive::Bool(r)) => {
+                Primitive::U8(l ^ if r == &true { 1 } else { 0 })
+            }
+            (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 ^ r),
+            (Primitive::U8(l), Primitive::I8(r)) => Primitive::I8(*l as i8 ^ r),
+            (Primitive::I8(l), Primitive::I8(r)) => Primitive::I8(l ^ r),
+            (Primitive::I8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 ^ r),
+            (Primitive::I8(l), Primitive::U8(r)) => Primitive::I8(l ^ *r as i8),
+            (Primitive::I8(l), Primitive::Bool(r)) => {
+                Primitive::I8(l ^ if r == &true { 1 } else { 0 })
+            }
+            (Primitive::Int(l), Primitive::U8(r)) => Primitive::Int(l ^ *r as i128),
+            (Primitive::Int(l), Primitive::I8(r)) => Primitive::Int(l ^ *r as i128),
+            (Primitive::Int(l), Primitive::Int(r)) => Primitive::Int(l ^ *r),
+            (Primitive::Int(l), Primitive::Bool(r)) => {
+                Primitive::Int(l ^ if r == &true { 1 } else { 0 })
+            }
+            _ => {
+                return Primitive::Error(format!(
+                    "illegal call to 'bitwise_xor' => left: {self} right: {rhs}"
                 ))
             }
         }
