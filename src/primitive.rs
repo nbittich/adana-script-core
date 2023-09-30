@@ -793,40 +793,16 @@ impl Mul for Primitive {
                 l.mul(&r)
             }
 
-            (Primitive::U8(l), Primitive::U8(r)) if r != 0 => {
-                if let Some(v) = l.checked_mul(r) {
-                    Primitive::U8(v)
-                } else {
-                    Primitive::Int(l as i128 * r as i128)
-                }
-            }
-            (Primitive::U8(l), Primitive::I8(r)) if r != 0 => {
-                if let Some(v) = (l as i8).checked_mul(r) {
-                    Primitive::I8(v)
-                } else {
-                    Primitive::Int(l as i128 * r as i128)
-                }
-            }
+            (Primitive::U8(l), Primitive::U8(r)) if r != 0 => Primitive::Int(l as i128 * r as i128),
+            (Primitive::U8(l), Primitive::I8(r)) if r != 0 => Primitive::Int(l as i128 * r as i128),
             (Primitive::U8(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l as i128 * r),
             (Primitive::U8(l), Primitive::Double(r)) => Primitive::Double(l as f64 * r),
             (Primitive::U8(l), Primitive::Array(r)) => {
                 Primitive::Array(multiply_array(r, l as i128))
             }
 
-            (Primitive::I8(l), Primitive::U8(r)) if r != 0 => {
-                if let Some(v) = l.checked_mul(r as i8) {
-                    Primitive::I8(v)
-                } else {
-                    Primitive::Int(l as i128 * r as i128)
-                }
-            }
-            (Primitive::I8(l), Primitive::I8(r)) if r != 0 => {
-                if let Some(v) = l.checked_mul(r) {
-                    Primitive::I8(v)
-                } else {
-                    Primitive::Int(l as i128 * r as i128)
-                }
-            }
+            (Primitive::I8(l), Primitive::U8(r)) if r != 0 => Primitive::Int(l as i128 * r as i128),
+            (Primitive::I8(l), Primitive::I8(r)) if r != 0 => Primitive::Int(l as i128 * r as i128),
             (Primitive::I8(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l as i128 * r),
             (Primitive::I8(l), Primitive::Double(r)) => Primitive::Double(l as f64 * r),
             (Primitive::I8(l), Primitive::Array(r)) if l >= 0 => {
