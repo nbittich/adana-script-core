@@ -538,12 +538,8 @@ impl Pow for Primitive {
 
             (Primitive::U8(l), Primitive::Int(r)) => Primitive::Double((*l as f64).powf(*r as f64)),
             (Primitive::I8(l), Primitive::Int(r)) => Primitive::Double((*l as f64).powf(*r as f64)),
-            (Primitive::U8(l), Primitive::Double(r)) => {
-                Primitive::Double((*l as f64).powf(*r as f64))
-            }
-            (Primitive::I8(l), Primitive::Double(r)) => {
-                Primitive::Double((*l as f64).powf(*r as f64))
-            }
+            (Primitive::U8(l), Primitive::Double(r)) => Primitive::Double((*l as f64).powf(*r)),
+            (Primitive::I8(l), Primitive::Double(r)) => Primitive::Double((*l as f64).powf(*r)),
 
             #[allow(clippy::manual_range_contains)]
             (Primitive::Int(l), Primitive::Int(r)) if r >= &0 && r <= &MAX_U32_AS_I128 => {
@@ -801,7 +797,7 @@ impl Mul for Primitive {
                 }
             }
             (Primitive::I8(l), Primitive::I8(r)) if r != 0 => {
-                if let Some(v) = (l as i8).checked_mul(r) {
+                if let Some(v) = l.checked_mul(r) {
                     Primitive::I8(v)
                 } else {
                     Primitive::Int(l as i128 * r as i128)
@@ -897,7 +893,7 @@ impl Div for Primitive {
                 }
             }
             (Primitive::I8(l), Primitive::I8(r)) if r != 0 => {
-                if let Some(v) = (l as i8).checked_div(r) {
+                if let Some(v) = l.checked_div(r) {
                     Primitive::I8(v)
                 } else {
                     Primitive::Int(l as i128 / r as i128)
@@ -938,7 +934,7 @@ impl Neg for Primitive {
             }
             Primitive::U8(n) if *n > i8::MAX as u8 => Primitive::Int(-(*n as i128)),
             Primitive::U8(n) => Primitive::I8(-(*n as i8)),
-            Primitive::I8(n) => Primitive::I8(-(*n as i8)),
+            Primitive::I8(n) => Primitive::I8(-*n),
 
             Primitive::Int(n) => Primitive::Int(-n),
             Primitive::Double(n) => Primitive::Double(-n),
@@ -1076,11 +1072,9 @@ impl BitShift for Primitive {
             (Primitive::Int(l), Primitive::Bool(r)) => {
                 Primitive::Int(l >> if r == &true { 1 } else { 0 })
             }
-            _ => {
-                return Primitive::Error(format!(
-                    "illegal call to 'r_shift' => left: {self} right: {rhs}"
-                ))
-            }
+            _ => Primitive::Error(format!(
+                "illegal call to 'r_shift' => left: {self} right: {rhs}"
+            )),
         }
     }
 
@@ -1124,11 +1118,9 @@ impl BitShift for Primitive {
             (Primitive::Int(l), Primitive::Bool(r)) => {
                 Primitive::Int(l << if r == &true { 1 } else { 0 })
             }
-            _ => {
-                return Primitive::Error(format!(
-                    "illegal call to 'l_shift' => left: {self} right: {rhs}"
-                ))
-            }
+            _ => Primitive::Error(format!(
+                "illegal call to 'l_shift' => left: {self} right: {rhs}"
+            )),
         }
     }
 }
@@ -1150,7 +1142,7 @@ impl Or for Primitive {
             return Primitive::Bool(true);
         }
         if !matches!((self, &rhs), (Primitive::Bool(_), Primitive::Bool(_))) {
-            return Primitive::Error(format!("illegal call to 'or' => left: {self} right: {rhs}"));
+            Primitive::Error(format!("illegal call to 'or' => left: {self} right: {rhs}"));
         }
         rhs.clone()
     }
@@ -1187,11 +1179,9 @@ impl Or for Primitive {
             (Primitive::Int(l), Primitive::Bool(r)) => {
                 Primitive::Int(l | if r == &true { 1 } else { 0 })
             }
-            _ => {
-                return Primitive::Error(format!(
-                    "illegal call to 'bitwise_or' => left: {self} right: {rhs}"
-                ))
-            }
+            _ => Primitive::Error(format!(
+                "illegal call to 'bitwise_or' => left: {self} right: {rhs}"
+            )),
         }
     }
 
@@ -1227,11 +1217,9 @@ impl Or for Primitive {
             (Primitive::Int(l), Primitive::Bool(r)) => {
                 Primitive::Int(l ^ if r == &true { 1 } else { 0 })
             }
-            _ => {
-                return Primitive::Error(format!(
-                    "illegal call to 'bitwise_xor' => left: {self} right: {rhs}"
-                ))
-            }
+            _ => Primitive::Error(format!(
+                "illegal call to 'bitwise_xor' => left: {self} right: {rhs}"
+            )),
         }
     }
 }
@@ -1292,11 +1280,9 @@ impl And for Primitive {
             (Primitive::Int(l), Primitive::Bool(r)) => {
                 Primitive::Int(l & if r == &true { 1 } else { 0 })
             }
-            _ => {
-                return Primitive::Error(format!(
-                    "illegal call to 'bitwise_and' => left: {self} right: {rhs}"
-                ))
-            }
+            _ => Primitive::Error(format!(
+                "illegal call to 'bitwise_and' => left: {self} right: {rhs}"
+            )),
         }
     }
 }
@@ -1338,7 +1324,7 @@ impl PartialOrd for Primitive {
             (Primitive::U8(l), Primitive::Double(r)) => (*l as f64).partial_cmp(r),
 
             (Primitive::I8(l), Primitive::U8(r)) => l.partial_cmp(&(*r as i8)),
-            (Primitive::I8(l), Primitive::I8(r)) => (*l as i8).partial_cmp(r),
+            (Primitive::I8(l), Primitive::I8(r)) => (*l).partial_cmp(r),
             (Primitive::I8(l), Primitive::Int(r)) => (*l as i128).partial_cmp(r),
             (Primitive::I8(l), Primitive::Double(r)) => (*l as f64).partial_cmp(r),
 
