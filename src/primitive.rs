@@ -653,23 +653,11 @@ impl Sub for Primitive {
                     Primitive::Int(l as i128 - r as i128)
                 }
             }
-            (Primitive::U8(l), Primitive::I8(r)) => {
-                if let Some(v) = (l as i8).checked_sub(r) {
-                    Primitive::I8(v)
-                } else {
-                    Primitive::Int(l as i128 - r as i128)
-                }
-            }
+            (Primitive::U8(l), Primitive::I8(r)) => Primitive::Int(l as i128 - r as i128),
             (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int(l as i128 - r),
             (Primitive::U8(l), Primitive::Double(r)) => Primitive::Double(l as f64 - r),
 
-            (Primitive::I8(l), Primitive::U8(r)) => {
-                if let Some(v) = l.checked_sub(r as i8) {
-                    Primitive::I8(v)
-                } else {
-                    Primitive::Int(l as i128 - r as i128)
-                }
-            }
+            (Primitive::I8(l), Primitive::U8(r)) => Primitive::Int(l as i128 - r as i128),
             (Primitive::I8(l), Primitive::I8(r)) => {
                 if let Some(v) = l.checked_sub(r) {
                     Primitive::I8(v)
@@ -715,13 +703,13 @@ impl Rem for Primitive {
             }
 
             (Primitive::U8(l), Primitive::U8(r)) if r != 0 => Primitive::U8(l % r),
-            (Primitive::U8(l), Primitive::I8(r)) if r != 0 => Primitive::I8(l as i8 % r),
+            (Primitive::U8(l), Primitive::I8(r)) if r != 0 => Primitive::Int(l as i128 % r as i128),
             (Primitive::U8(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l as i128 % r),
             (Primitive::U8(l), Primitive::Double(r)) => Primitive::Double(l as f64 % r),
             (Primitive::U8(_), _) => Primitive::Double(f64::NAN),
 
             (Primitive::I8(l), Primitive::I8(r)) if r != 0 => Primitive::I8(l % r),
-            (Primitive::I8(l), Primitive::U8(r)) if r != 0 => Primitive::I8(l % r as i8),
+            (Primitive::I8(l), Primitive::U8(r)) if r != 0 => Primitive::Int(l as i128 % r as i128),
             (Primitive::I8(l), Primitive::Int(r)) if r != 0 => Primitive::Int(l as i128 % r),
             (Primitive::I8(l), Primitive::Double(r)) => Primitive::Double(l as f64 % r),
             (Primitive::I8(_), _) => Primitive::Double(f64::NAN),
