@@ -996,13 +996,13 @@ impl BitShift for Primitive {
         }
 
         match (self, rhs) {
-            (Primitive::U8(l), Primitive::U8(r)) => Primitive::U8(l >> r),
+            (Primitive::U8(l), Primitive::U8(r)) => Primitive::Int(*l as i128 >> *r as i128),
             (Primitive::U8(l), Primitive::Bool(r)) => {
                 Primitive::U8(l >> if r == &true { 1 } else { 0 })
             }
             (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 >> r),
             (Primitive::U8(l), Primitive::I8(r)) => Primitive::Int(*l as i128 >> *r as i128),
-            (Primitive::I8(l), Primitive::I8(r)) => Primitive::I8(l >> r),
+            (Primitive::I8(l), Primitive::I8(r)) => Primitive::Int(*l as i128 >> *r as i128),
             (Primitive::I8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 >> r),
             (Primitive::I8(l), Primitive::U8(r)) => Primitive::Int(*l as i128 >> *r as i128),
             (Primitive::I8(l), Primitive::Bool(r)) => {
@@ -1042,13 +1042,13 @@ impl BitShift for Primitive {
         }
 
         match (self, rhs) {
-            (Primitive::U8(l), Primitive::U8(r)) => Primitive::U8(l << r),
+            (Primitive::U8(l), Primitive::U8(r)) => Primitive::Int((*l as i128) << *r as i128),
             (Primitive::U8(l), Primitive::Bool(r)) => {
                 Primitive::U8(l << if r == &true { 1 } else { 0 })
             }
             (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int((*l as i128) << r),
             (Primitive::U8(l), Primitive::I8(r)) => Primitive::Int((*l as i128) << r),
-            (Primitive::I8(l), Primitive::I8(r)) => Primitive::I8(l << r),
+            (Primitive::I8(l), Primitive::I8(r)) => Primitive::Int((*l as i128) << (*r as i128)),
             (Primitive::I8(l), Primitive::Int(r)) => Primitive::Int((*l as i128) << r),
             (Primitive::I8(l), Primitive::U8(r)) => Primitive::Int((*l as i128) << *r as i128),
             (Primitive::I8(l), Primitive::Bool(r)) => {
