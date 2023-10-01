@@ -997,7 +997,7 @@ impl BitShift for Primitive {
 
         match (self, rhs) {
             (Primitive::U8(l), Primitive::U8(r)) => {
-                Primitive::Int((*l as u64 >> *r as u64) as i128)
+                Primitive::Int((*l as u128 >> *r as u128) as i128)
             }
             (Primitive::U8(l), Primitive::Bool(r)) => {
                 Primitive::U8(l >> if r == &true { 1 } else { 0 })
@@ -1049,7 +1049,7 @@ impl BitShift for Primitive {
 
         match (self, rhs) {
             (Primitive::U8(l), Primitive::U8(r)) => {
-                Primitive::Int(((*l as u64) << (*r as u64)) as i128)
+                Primitive::Int(((*l as u128) << (*r as u128)) as i128)
             }
             (Primitive::U8(l), Primitive::Bool(r)) => {
                 Primitive::U8(l << if r == &true { 1 } else { 0 })
