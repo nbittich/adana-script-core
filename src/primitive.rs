@@ -1108,10 +1108,10 @@ impl Or for Primitive {
                 Primitive::U8(l | if r == &true { 1 } else { 0 })
             }
             (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 | r),
-            (Primitive::U8(l), Primitive::I8(r)) => Primitive::I8(*l as i8 | r),
+            (Primitive::U8(l), Primitive::I8(r)) => Primitive::Int(*l as i128 | *r as i128),
             (Primitive::I8(l), Primitive::I8(r)) => Primitive::I8(l | r),
             (Primitive::I8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 | r),
-            (Primitive::I8(l), Primitive::U8(r)) => Primitive::I8(l | *r as i8),
+            (Primitive::I8(l), Primitive::U8(r)) => Primitive::Int(*l as i128 | *r as i128),
             (Primitive::I8(l), Primitive::Bool(r)) => {
                 Primitive::I8(l | if r == &true { 1 } else { 0 })
             }
@@ -1146,10 +1146,10 @@ impl Or for Primitive {
                 Primitive::U8(l ^ if r == &true { 1 } else { 0 })
             }
             (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 ^ r),
-            (Primitive::U8(l), Primitive::I8(r)) => Primitive::I8(*l as i8 ^ r),
+            (Primitive::U8(l), Primitive::I8(r)) => Primitive::Int(*l as i128 ^ *r as i128),
             (Primitive::I8(l), Primitive::I8(r)) => Primitive::I8(l ^ r),
             (Primitive::I8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 ^ r),
-            (Primitive::I8(l), Primitive::U8(r)) => Primitive::I8(l ^ *r as i8),
+            (Primitive::I8(l), Primitive::U8(r)) => Primitive::Int(*l as i128 ^ *r as i128),
             (Primitive::I8(l), Primitive::Bool(r)) => {
                 Primitive::I8(l ^ if r == &true { 1 } else { 0 })
             }
@@ -1209,10 +1209,10 @@ impl And for Primitive {
                 Primitive::U8(l & if r == &true { 1 } else { 0 })
             }
             (Primitive::U8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 & r),
-            (Primitive::U8(l), Primitive::I8(r)) => Primitive::I8(*l as i8 & r),
+            (Primitive::U8(l), Primitive::I8(r)) => Primitive::Int(*l as i128 & *r as i128),
             (Primitive::I8(l), Primitive::I8(r)) => Primitive::I8(l & r),
             (Primitive::I8(l), Primitive::Int(r)) => Primitive::Int(*l as i128 & r),
-            (Primitive::I8(l), Primitive::U8(r)) => Primitive::I8(l & *r as i8),
+            (Primitive::I8(l), Primitive::U8(r)) => Primitive::Int(*l as i128 & *r as i128),
             (Primitive::I8(l), Primitive::Bool(r)) => {
                 Primitive::I8(l & if r == &true { 1 } else { 0 })
             }
