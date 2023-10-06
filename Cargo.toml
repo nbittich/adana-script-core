@@ -1,6 +1,6 @@
 [package]
 name = "adana-script-core"
-version = "0.15.0"
+version = "0.15.1"
 edition = "2021"
 homepage = "https://github.com/nbittich/adana-script-core"
 repository = "https://github.com/nbittich/adana-script-core"
