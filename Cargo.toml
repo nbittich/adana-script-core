@@ -13,6 +13,6 @@ rust-version = "1.75"
 [dependencies]
 anyhow = "1.0.79"
 libloading = "0.8.1"
-serde = { version = "1.0.195", features = ["rc"] }
-serde_derive = "1.0.195"
-strum = { version = "0.25.0", features = ["derive"] }
+serde = { version = "1.0.196", features = ["rc"] }
+serde_derive = "1.0.196"
+strum = { version = "0.26.1", features = ["derive"] }
