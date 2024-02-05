@@ -1,7 +1,10 @@
 pub mod primitive;
 use std::collections::BTreeMap;
 
-use constants::{REQUIRE, TO_BINARY, TO_HEX};
+use constants::{
+    BREAK, DROP, ELSE, EULER_NUMBER, FALSE, FOR, IF, IN, MULTILINE, NULL, PI, REQUIRE, RETURN,
+    STRUCT, TAU, TO_BINARY, TO_HEX, TRUE, WHILE,
+};
 use primitive::Primitive;
 use serde_derive::{Deserialize, Serialize};
 use strum::EnumCount;
@@ -297,3 +300,66 @@ impl Operator {
         }
     }
 }
+
+pub const FORBIDDEN_VARIABLE_NAME: &[&str] = &[
+    TRUE,
+    FALSE,
+    TAU,
+    IF,
+    PI,
+    PRINT_LN,
+    PRINT,
+    LENGTH,
+    EULER_NUMBER,
+    ABS,
+    LOG,
+    TO_INT,
+    TO_DOUBLE,
+    TO_HEX,
+    TO_BINARY,
+    TO_STRING,
+    EVAL,
+    TO_BOOL,
+    SQRT,
+    BREAK,
+    NULL,
+    FOR,
+    IN,
+    DROP,
+    //READ_LINES,
+    RETURN,
+    LN,
+    SIN,
+    COS,
+    TYPE_OF,
+    TAN,
+    INCLUDE,
+    WHILE,
+    ELSE,
+    REQUIRE,
+    MULTILINE,
+    STRUCT,
+    Operator::Add.as_str(),
+    Operator::Subtr.as_str(),
+    Operator::Div.as_str(),
+    Operator::Mult.as_str(),
+    Operator::Pow.as_str(),
+    Operator::Pow2.as_str(),
+    Operator::Pow3.as_str(),
+    Operator::Not.as_str(),
+    Operator::Mod.as_str(),
+    Operator::Less.as_str(),
+    Operator::Greater.as_str(),
+    Operator::LessOrEqual.as_str(),
+    Operator::GreaterOrEqual.as_str(),
+    Operator::Equal.as_str(),
+    Operator::NotEqual.as_str(),
+    Operator::And.as_str(),
+    Operator::Or.as_str(),
+    Operator::BitwiseNot.as_str(),
+    Operator::BitwiseAnd.as_str(),
+    Operator::BitwiseOr.as_str(),
+    Operator::BitwiseXor.as_str(),
+    Operator::BitwiseLShift.as_str(),
+    Operator::BitwiseRShift.as_str(),
+];
